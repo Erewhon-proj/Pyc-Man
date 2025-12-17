@@ -1,3 +1,5 @@
+"""Game settings and constants."""
+
 # Constants
 SCREEN_WIDTH = 600
 SCREEN_HEIGHT = 660
@@ -16,4 +18,3 @@ CYAN = (0, 255, 255)
 ORANGE = (255, 184, 82)
 FRIGHTENED_BLUE = (50, 50, 255)
 FRIGHTENED_WHITE = (200, 200, 255)
-
