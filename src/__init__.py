@@ -1,0 +1,1 @@
+"""Pyc-Man game package."""
