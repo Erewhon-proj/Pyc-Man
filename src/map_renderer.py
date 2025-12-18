@@ -4,6 +4,7 @@ import pygame
 from src.game_map import GameMap
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, BLACK
 
+
 def map_renderer():
     """Main function"""
     pygame.init()
@@ -27,6 +28,7 @@ def map_renderer():
         pygame.display.flip()
 
     pygame.quit()
+
 
 if __name__ == "__main__":
     map_renderer()

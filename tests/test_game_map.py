@@ -1,6 +1,7 @@
 """
 Test suite for GameMap class
 """
+
 # pylint: disable=redefined-outer-name
 
 import pytest
@@ -24,21 +25,17 @@ class TestGameMap:
 
     def test_initial_pellet_count(self, game_map):
         """Initial pellet count should match layout"""
-        pellet_count = sum(
-            cell in (2, 3)
-            for row in game_map.layout
-            for cell in row
-        )
+        pellet_count = sum(cell in (2, 3) for row in game_map.layout for cell in row)
 
         assert game_map.initial_pellets == pellet_count
 
     @pytest.mark.parametrize(
         "x, y, expected",
         [
-            (0, 0, True),    # Wall
-            (1, 1, False),   # Power pellet
-            (2, 1, False),   # Pellet
-            (9, 1, True),    # Wall
+            (0, 0, True),  # Wall
+            (1, 1, False),  # Power pellet
+            (2, 1, False),  # Pellet
+            (9, 1, True),  # Wall
         ],
     )
     def test_is_wall(self, game_map, x, y, expected):

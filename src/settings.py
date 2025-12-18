@@ -2,8 +2,8 @@
 
 # Constants
 TILE_SIZE = 30
-SCREEN_WIDTH = 19 * TILE_SIZE #columns from game_map layout
-SCREEN_HEIGHT = 22 * TILE_SIZE #rows from game_map layout
+SCREEN_WIDTH = 19 * TILE_SIZE  # columns from game_map layout
+SCREEN_HEIGHT = 22 * TILE_SIZE  # rows from game_map layout
 FPS = 60
 
 
