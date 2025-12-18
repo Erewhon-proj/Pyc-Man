@@ -1,9 +1,10 @@
 """Module for managing the Pac-Man game map"""
 
 import math
+
 import pygame
 
-from src.settings import TILE_SIZE, BLUE, WHITE
+from src.settings import BLUE, TILE_SIZE, WHITE
 
 
 class GameMap:

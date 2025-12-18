@@ -1,8 +1,9 @@
 """Simple File to render screen"""
 
 import pygame
+
 from src.game_map import GameMap
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, BLACK
+from src.settings import BLACK, FPS, SCREEN_HEIGHT, SCREEN_WIDTH
 
 
 def map_renderer():
