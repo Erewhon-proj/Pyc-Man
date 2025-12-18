@@ -1,10 +1,11 @@
 """Game settings and constants."""
 
 # Constants
-SCREEN_WIDTH = 600
-SCREEN_HEIGHT = 660
 TILE_SIZE = 30
+SCREEN_WIDTH = 19 * TILE_SIZE  # columns from game_map layout
+SCREEN_HEIGHT = 22 * TILE_SIZE  # rows from game_map layout
 FPS = 60
+
 
 # Colors
 BLACK = (0, 0, 0)
