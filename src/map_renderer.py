@@ -16,7 +16,6 @@ def map_renderer():
 
     running = True
     while running:
-        """Main Loop"""
         clock.tick(FPS)
 
         for event in pygame.event.get():
@@ -30,5 +29,4 @@ def map_renderer():
     pygame.quit()
 
 if __name__ == "__main__":
-    """Main Executor"""
     map_renderer()
