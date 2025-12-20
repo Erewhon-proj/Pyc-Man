@@ -8,7 +8,7 @@ Test suite for Ghost classes.
 from typing import Tuple
 
 import pytest
-from pytest_mock import MockerFixture
+from pytest_mock import MockerFixture  # type: ignore[import-not-found]
 
 from src.direction import Direction
 from src.game_map import GameMap
@@ -238,7 +238,7 @@ class TestGhostAbstractMethod:
         """Test Ghost cannot be instantiated without abstract method."""
         with pytest.raises(TypeError) as exc_info:
             # pylint: disable=abstract-class-instantiated
-            Ghost(mock_game_map, ghost_config)
+            Ghost(mock_game_map, ghost_config)  # type: ignore[abstract]
 
         assert "abstract" in str(exc_info.value).lower()
 
