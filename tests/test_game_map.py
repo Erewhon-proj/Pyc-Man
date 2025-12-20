@@ -3,6 +3,7 @@ Test suite for GameMap class
 """
 
 # pylint: disable=redefined-outer-name
+# pylint: disable=too-many-positional-arguments  # parametrized tests
 
 import pytest
 
@@ -66,3 +67,59 @@ class TestGameMap:
     def test_set_cell_out_of_bounds_does_nothing(self, game_map):
         """Setting out-of-bounds should not crash"""
         game_map.set_cell(-1, -1, 0)
+
+    @pytest.mark.parametrize(
+        "pixel_x, pixel_y, expected_grid_x, expected_grid_y",
+        [
+            (0, 0, 0, 0),
+            (30, 30, 1, 1),
+            (45, 60, 1, 2),
+            (150, 150, 5, 5),
+        ],
+    )
+    def test_pixel_to_grid(
+        self, game_map, pixel_x, pixel_y, expected_grid_x, expected_grid_y
+    ):
+        """Test conversion from pixel to grid coordinates"""
+        grid_x, grid_y = game_map.pixel_to_grid(pixel_x, pixel_y)
+        assert grid_x == expected_grid_x
+        assert grid_y == expected_grid_y
+
+    @pytest.mark.parametrize(
+        "grid_x, grid_y, expected_pixel_x, expected_pixel_y",
+        [
+            (0, 0, 15.0, 15.0),
+            (1, 1, 45.0, 45.0),
+            (5, 5, 165.0, 165.0),
+        ],
+    )
+    def test_grid_to_pixel(
+        self, game_map, grid_x, grid_y, expected_pixel_x, expected_pixel_y
+    ):
+        """Test conversion from grid to pixel coordinates (center)"""
+        pixel_x, pixel_y = game_map.grid_to_pixel(grid_x, grid_y)
+        assert pixel_x == expected_pixel_x
+        assert pixel_y == expected_pixel_y
+
+    @pytest.mark.parametrize(
+        "x, y, expected",
+        [
+            (0, 0, False),  # Wall - not walkable
+            (1, 1, True),  # Power pellet - walkable
+            (2, 1, True),  # Pellet - walkable
+            (9, 1, False),  # Wall - not walkable
+        ],
+    )
+    def test_is_walkable(self, game_map, x, y, expected):
+        """Test walkability detection"""
+        assert game_map.is_walkable(x, y) == expected
+
+    def test_height_property(self, game_map):
+        """Test height property returns number of rows"""
+        assert game_map.height == len(game_map.layout)
+        assert game_map.height == 22
+
+    def test_width_property(self, game_map):
+        """Test width property returns number of columns"""
+        assert game_map.width == len(game_map.layout[0])
+        assert game_map.width == 19

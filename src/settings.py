@@ -6,6 +6,16 @@ SCREEN_WIDTH = 19 * TILE_SIZE  # columns from game_map layout
 SCREEN_HEIGHT = 22 * TILE_SIZE  # rows from game_map layout
 FPS = 60
 
+# Ghost AI settings
+GHOST_SPEED = 2
+PINKY_TILES_AHEAD = 4
+INKY_OFFSET_TILES = 2
+CLYDE_SCATTER_DISTANCE_TILES = 8
+
+# Ghost house exit coordinates (in tiles)
+GHOST_HOUSE_EXIT_X = 13.5
+GHOST_HOUSE_EXIT_Y = 11.5
+
 
 # Colors
 BLACK = (0, 0, 0)

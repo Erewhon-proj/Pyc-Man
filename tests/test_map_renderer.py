@@ -2,7 +2,7 @@
 Basic tests for map_renderer module
 """
 
-from src.map_renderer import map_renderer
+from src.main import map_renderer
 
 
 class TestMapRenderer:

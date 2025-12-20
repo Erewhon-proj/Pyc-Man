@@ -62,6 +62,32 @@ class GameMap:
         if 0 <= grid_y < len(self.layout) and 0 <= grid_x < len(self.layout[0]):
             self.layout[grid_y][grid_x] = value
 
+    def pixel_to_grid(self, pixel_x: float, pixel_y: float) -> tuple[int, int]:
+        """Convert pixel coordinates to grid coordinates"""
+        grid_x = int(pixel_x / TILE_SIZE)
+        grid_y = int(pixel_y / TILE_SIZE)
+        return grid_x, grid_y
+
+    def grid_to_pixel(self, grid_x: int, grid_y: int) -> tuple[float, float]:
+        """Convert grid coordinates to pixel coordinates (center of tile)"""
+        pixel_x = grid_x * TILE_SIZE + TILE_SIZE // 2
+        pixel_y = grid_y * TILE_SIZE + TILE_SIZE // 2
+        return float(pixel_x), float(pixel_y)
+
+    def is_walkable(self, grid_x: int, grid_y: int) -> bool:
+        """Check if a grid position is walkable (not a wall)"""
+        return not self.is_wall(grid_x, grid_y)
+
+    @property
+    def height(self) -> int:
+        """Get the height of the map in grid cells"""
+        return len(self.layout)
+
+    @property
+    def width(self) -> int:
+        """Get the width of the map in grid cells"""
+        return len(self.layout[0]) if self.layout else 0
+
     def draw(self, screen: pygame.Surface):
         """Render the map"""
         for y, row in enumerate(self.layout):
