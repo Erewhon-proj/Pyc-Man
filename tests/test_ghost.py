@@ -12,12 +12,17 @@ from pytest_mock import MockerFixture  # type: ignore[import-not-found]
 
 from src.direction import Direction
 from src.game_map import GameMap
-from src.ghost import Ghost, GhostConfig, GhostHouseState
+from src.ghost import Blinky, Clyde, Ghost, GhostConfig, GhostHouseState, Inky, Pinky
 from src.position import Position
 from src.settings import (
+    CYAN,
     GHOST_HOUSE_EXIT_X,
     GHOST_HOUSE_EXIT_Y,
     GHOST_SPEED,
+    INKY_OFFSET_TILES,
+    ORANGE,
+    PINK,
+    PINKY_TILES_AHEAD,
     RED,
     TILE_SIZE,
 )
@@ -221,6 +226,18 @@ class TestGhostProperties:
         result = concrete_ghost.in_ghost_house
 
         assert result == expected
+
+    def test_color_property_returns_color(self, concrete_ghost: Ghost) -> None:
+        """Test that color property returns correct value."""
+        result = concrete_ghost.color
+
+        assert result == RED
+
+    def test_name_property_returns_name(self, concrete_ghost: Ghost) -> None:
+        """Test that name property returns correct value."""
+        result = concrete_ghost.name
+
+        assert result == "TestGhost"
 
 
 class TestGhostAbstractMethod:
@@ -465,3 +482,149 @@ class TestGhostReturnToHouse:
         assert concrete_ghost._position.y == spawn_y
         assert concrete_ghost._house_state == GhostHouseState.IN_HOUSE
         assert concrete_ghost._direction == Direction.RIGHT
+
+
+class TestBlinky:
+    """Test suite for Blinky ghost."""
+
+    def test_initialization(self, mock_game_map: GameMap) -> None:
+        """Test Blinky initializes with correct configuration."""
+        blinky = Blinky(mock_game_map, 100.0, 200.0)
+
+        assert blinky._position.x == 100.0
+        assert blinky._position.y == 200.0
+        assert blinky._color == RED
+        assert blinky._name == "Blinky"
+        assert blinky._house_state == GhostHouseState.IN_HOUSE
+
+    def test_calculate_target_returns_pacman_position(
+        self, mock_game_map: GameMap
+    ) -> None:
+        """Test Blinky targets Pac-Man's exact position."""
+        blinky = Blinky(mock_game_map, 100.0, 100.0)
+
+        target = blinky.calculate_target(250.0, 300.0, (1, 0))
+
+        assert target == (250.0, 300.0)
+
+
+class TestPinky:
+    """Test suite for Pinky ghost."""
+
+    def test_initialization(self, mock_game_map: GameMap) -> None:
+        """Test Pinky initializes with correct configuration."""
+        pinky = Pinky(mock_game_map, 150.0, 250.0)
+
+        assert pinky._position.x == 150.0
+        assert pinky._position.y == 250.0
+        assert pinky._color == PINK
+        assert pinky._name == "Pinky"
+        assert pinky._tiles_ahead == PINKY_TILES_AHEAD
+
+    def test_calculate_target_anticipates_pacman(self, mock_game_map: GameMap) -> None:
+        """Test Pinky targets ahead of Pac-Man."""
+        pinky = Pinky(mock_game_map, 100.0, 100.0)
+        offset = PINKY_TILES_AHEAD * TILE_SIZE
+
+        target = pinky.calculate_target(200.0, 200.0, (1, 0))
+
+        assert target == (200.0 + offset, 200.0)
+
+
+class TestInky:
+    """Test suite for Inky ghost."""
+
+    def test_initialization(self, mock_game_map: GameMap) -> None:
+        """Test Inky initializes with correct configuration."""
+        inky = Inky(mock_game_map, 180.0, 220.0)
+
+        assert inky._position.x == 180.0
+        assert inky._position.y == 220.0
+        assert inky._color == CYAN
+        assert inky._name == "Inky"
+        assert inky._offset_tiles == INKY_OFFSET_TILES
+        assert inky._blinky is None
+
+    def test_set_blinky(self, mock_game_map: GameMap) -> None:
+        """Test Inky can have Blinky reference set."""
+        inky = Inky(mock_game_map, 100.0, 100.0)
+        blinky = Blinky(mock_game_map, 200.0, 200.0)
+
+        inky.set_blinky(blinky)
+
+        assert inky._blinky == blinky
+
+    @pytest.mark.parametrize(
+        "has_blinky,expected_x,expected_y",
+        [
+            (False, 300.0, 400.0),
+            (True, 500.0, 600.0),
+        ],
+    )
+    def test_calculate_target(
+        self,
+        mock_game_map: GameMap,
+        has_blinky: bool,
+        expected_x: float,
+        expected_y: float,
+    ) -> None:
+        """Test Inky targeting with and without Blinky."""
+        inky = Inky(mock_game_map, 100.0, 100.0)
+        offset = INKY_OFFSET_TILES * TILE_SIZE
+
+        if has_blinky:
+            blinky = Blinky(mock_game_map, 200.0, 200.0)
+            inky.set_blinky(blinky)
+            intermediate_x = 300.0 + offset
+            intermediate_y = 400.0
+            vector_x = intermediate_x - 200.0
+            vector_y = intermediate_y - 200.0
+            expected_x = 200.0 + vector_x * 2
+            expected_y = 200.0 + vector_y * 2
+
+        target = inky.calculate_target(300.0, 400.0, (1, 0))
+
+        if not has_blinky:
+            assert target == (300.0, 400.0)
+        else:
+            assert target == (expected_x, expected_y)
+
+
+class TestClyde:
+    """Test suite for Clyde ghost."""
+
+    def test_initialization(self, mock_game_map: GameMap) -> None:
+        """Test Clyde initializes with correct configuration."""
+        clyde = Clyde(mock_game_map, 120.0, 180.0)
+
+        assert clyde._position.x == 120.0
+        assert clyde._position.y == 180.0
+        assert clyde._color == ORANGE
+        assert clyde._name == "Clyde"
+
+    @pytest.mark.parametrize(
+        "ghost_x,ghost_y,pacman_x,pacman_y,should_chase",
+        [
+            (100.0, 100.0, 500.0, 100.0, True),
+            (100.0, 100.0, 150.0, 100.0, False),
+        ],
+    )
+    def test_calculate_target_behavior(
+        self,
+        mock_game_map: GameMap,
+        *,
+        ghost_x: float,
+        ghost_y: float,
+        pacman_x: float,
+        pacman_y: float,
+        should_chase: bool,
+    ) -> None:
+        """Test Clyde chases when far, scatters when close."""
+        clyde = Clyde(mock_game_map, ghost_x, ghost_y)
+
+        target = clyde.calculate_target(pacman_x, pacman_y, (1, 0))
+
+        if should_chase:
+            assert target == (pacman_x, pacman_y)
+        else:
+            assert target == (clyde._scatter_x, clyde._scatter_y)
