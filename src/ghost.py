@@ -245,3 +245,150 @@ class Ghost(ABC):
         self._position.y = self._spawn_position.y
         self._house_state = GhostHouseState.IN_HOUSE
         self._direction = Direction.RIGHT
+
+
+class Blinky(Ghost):
+    """
+    Blinky (Red Ghost) - The Chaser.
+    Directly targets Pac-Man's current position.
+    Starts in the ghost house but exits immediately (first to exit).
+    """
+
+    def __init__(self, game_map: GameMap, start_x: float, start_y: float) -> None:
+        """Initialize Blinky."""
+        config = GhostConfig(
+            start_position=Position(start_x, start_y),
+            color=settings.RED,
+            name="Blinky",
+            starts_in_house=True,
+        )
+        super().__init__(game_map, config)
+
+    def calculate_target(
+        self, pacman_x: float, pacman_y: float, pacman_direction: Tuple[int, int]
+    ) -> Tuple[float, float]:
+        """Blinky targets Pac-Man's exact position."""
+        return pacman_x, pacman_y
+
+
+class Pinky(Ghost):
+    """
+    Pinky (Pink Ghost) - The Ambusher.
+    Targets 4 tiles ahead of Pac-Man in his current direction.
+    Starts in the ghost house.
+    """
+
+    def __init__(self, game_map: GameMap, start_x: float, start_y: float) -> None:
+        """Initialize Pinky."""
+        config = GhostConfig(
+            start_position=Position(start_x, start_y),
+            color=settings.PINK,
+            name="Pinky",
+            starts_in_house=True,
+        )
+        super().__init__(game_map, config)
+        self._tiles_ahead: int = settings.PINKY_TILES_AHEAD
+
+    def calculate_target(
+        self, pacman_x: float, pacman_y: float, pacman_direction: Tuple[int, int]
+    ) -> Tuple[float, float]:
+        """Pinky anticipates Pac-Man's position by targeting 4 tiles ahead."""
+        offset_pixels: float = self._tiles_ahead * settings.TILE_SIZE
+        target_x: float = pacman_x + pacman_direction[0] * offset_pixels
+        target_y: float = pacman_y + pacman_direction[1] * offset_pixels
+        return target_x, target_y
+
+
+class Inky(Ghost):
+    """
+    Inky (Cyan Ghost) - The Bashful One.
+    Uses a more complex targeting pattern involving Pac-Man and Blinky's positions.
+    Starts in the ghost house.
+    """
+
+    def __init__(
+        self,
+        game_map: GameMap,
+        start_x: float,
+        start_y: float,
+        blinky: Optional[Blinky] = None,
+    ) -> None:
+        """Initialize Inky."""
+        config = GhostConfig(
+            start_position=Position(start_x, start_y),
+            color=settings.CYAN,
+            name="Inky",
+            starts_in_house=True,
+        )
+        super().__init__(game_map, config)
+        self._blinky: Optional[Blinky] = blinky
+        self._offset_tiles: int = settings.INKY_OFFSET_TILES
+
+    def set_blinky(self, blinky: Blinky) -> None:
+        """Set the reference to Blinky."""
+        self._blinky = blinky
+
+    def calculate_target(
+        self, pacman_x: float, pacman_y: float, pacman_direction: Tuple[int, int]
+    ) -> Tuple[float, float]:
+        """
+        1. Takes point 2 tiles ahead of Pac-Man in his direction
+        2. Draws vector from Blinky to that point
+        3. Doubles that vector - the end is Inky's target
+        """
+        if self._blinky is None:
+            return pacman_x, pacman_y
+
+        # Step 1: Calculate point 2 tiles ahead of Pac-Man in his direction
+        offset_pixels: float = self._offset_tiles * settings.TILE_SIZE
+        intermediate_x: float = pacman_x + pacman_direction[0] * offset_pixels
+        intermediate_y: float = pacman_y + pacman_direction[1] * offset_pixels
+
+        # Step 2: Calculate vector from Blinky to intermediate point
+        vector_x: float = intermediate_x - self._blinky.x
+        vector_y: float = intermediate_y - self._blinky.y
+
+        # Step 3: Double the vector starting from Blinky
+        target_x: float = self._blinky.x + vector_x * 2
+        target_y: float = self._blinky.y + vector_y * 2
+
+        return target_x, target_y
+
+
+class Clyde(Ghost):
+    """
+    Clyde (Orange Ghost) - The Stupid One.
+    Chases Pac-Man when far away, but runs to scatter corner when close.
+    Starts in the ghost house.
+    """
+
+    def __init__(self, game_map: GameMap, start_x: float, start_y: float) -> None:
+        """Initialize Clyde."""
+        config = GhostConfig(
+            start_position=Position(start_x, start_y),
+            color=settings.ORANGE,
+            name="Clyde",
+            starts_in_house=True,
+        )
+        super().__init__(game_map, config)
+        self._scatter_distance: float = (
+            settings.CLYDE_SCATTER_DISTANCE_TILES * settings.TILE_SIZE
+        )
+        self._scatter_x: float = 1.0 * settings.TILE_SIZE
+        self._scatter_y: float = (game_map.height - 2) * settings.TILE_SIZE
+
+    def calculate_target(
+        self, pacman_x: float, pacman_y: float, pacman_direction: Tuple[int, int]
+    ) -> Tuple[float, float]:
+        """
+        Clyde targets Pac-Man when far, scatter corner when close.
+        Classic "timid" behavior.
+        """
+        pacman_position = Position(pacman_x, pacman_y)
+        distance: float = self._position.distance_to(pacman_position)
+
+        if distance > self._scatter_distance:
+            # Far from Pac-Man: chase
+            return pacman_x, pacman_y
+        # Close to Pac-Man: scatter to corner
+        return self._scatter_x, self._scatter_y
