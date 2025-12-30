@@ -411,13 +411,19 @@ class Ghost(ABC):
         elif self._direction == Direction.DOWN:
             look_y = 2
 
-        self._draw_normal_eye(screen, x - 4, y - 4, look_x, look_y)
-        self._draw_normal_eye(screen, x + 4, y - 4, look_x, look_y)
+        # Pass offsets as a tuple to avoid R0917
+        self._draw_normal_eye(screen, x - 4, y - 4, (look_x, look_y))
+        self._draw_normal_eye(screen, x + 4, y - 4, (look_x, look_y))
 
     def _draw_normal_eye(
-        self, screen: pygame.Surface, eye_x: int, eye_y: int, lx: int, ly: int
+        self,
+        screen: pygame.Surface,
+        eye_x: int,
+        eye_y: int,
+        look_offset: Tuple[int, int],
     ) -> None:
         """Draw a single normal eye."""
+        lx, ly = look_offset
         pygame.draw.circle(screen, settings.WHITE, (eye_x, eye_y), 4)
         pygame.draw.circle(screen, settings.BLUE, (eye_x + lx, eye_y + ly), 2)
 
