@@ -26,17 +26,17 @@ def main() -> None:
     # --- Creazione Entità ---
 
     # 1. Crea Pac-Man (posizionato a riga 23, colonna 14 circa)
-    start_x = 14 * TILE_SIZE + TILE_SIZE / 2
+    start_x = 9 * TILE_SIZE + TILE_SIZE / 2
     start_y = (
         16 * TILE_SIZE + TILE_SIZE / 2
     )  # Aggiustato per stare nella mappa visibile
     pacman = PacMan(game_map, start_x, start_y)
 
     # 2. Crea i Fantasmi
-    blinky = Blinky(game_map, 14 * TILE_SIZE, 11 * TILE_SIZE)
-    pinky = Pinky(game_map, 14 * TILE_SIZE, 14 * TILE_SIZE)
-    inky = Inky(game_map, 12 * TILE_SIZE, 14 * TILE_SIZE, blinky)
-    clyde = Clyde(game_map, 16 * TILE_SIZE, 14 * TILE_SIZE)
+    blinky = Blinky(game_map, 9.5 * TILE_SIZE, 8.5 * TILE_SIZE)
+    pinky = Pinky(game_map, 8.5 * TILE_SIZE, 10.5 * TILE_SIZE)
+    inky = Inky(game_map, 9.5 * TILE_SIZE, 10.5 * TILE_SIZE, blinky)
+    clyde = Clyde(game_map, 10.5 * TILE_SIZE, 10.5 * TILE_SIZE)
 
     ghosts: List[Ghost] = [blinky, pinky, inky, clyde]
 
