@@ -14,6 +14,7 @@ from src.direction import Direction
 from src.ghost import Ghost
 from src.pacman import PacMan
 from src.settings import SCREEN_WIDTH, TILE_SIZE
+from tests.test_game_map import *
 
 
 @pytest.fixture

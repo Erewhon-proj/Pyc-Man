@@ -6,6 +6,7 @@ import pytest
 
 from src.position import Position
 from src.settings import TILE_SIZE
+from tests.test_game_map import *
 
 
 class TestPosition:
