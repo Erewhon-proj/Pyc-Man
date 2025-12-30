@@ -12,6 +12,7 @@ from src import settings
 from src.direction import Direction
 from src.game_map import GameMap
 from src.position import Position
+from src.ghost_visual_state import GhostVisualState
 
 
 class GhostHouseState(Enum):
@@ -58,6 +59,7 @@ class Ghost(ABC):
         self._direction: Direction = Direction.RIGHT
         self._speed: int = settings.GHOST_SPEED
         self._target: Optional[Position] = None
+        self.visual_state = GhostVisualState.NORMAL
 
         # Ghost house state machine
         self._house_state: GhostHouseState = (
@@ -112,6 +114,18 @@ class Ghost(ABC):
             Tuple of (target_x, target_y) in pixels
         """
         pass
+
+    def set_frightened(self):
+        """Set ghost to frightened visual state."""
+        self.visual_state = GhostVisualState.FRIGHTENED
+
+    def set_eyes(self):
+        """Set ghost to eyes-only visual state."""
+        self.visual_state = GhostVisualState.EYES
+
+    def set_normal(self):
+        """Set ghost back to normal visual state."""
+        self.visual_state = GhostVisualState.NORMAL
 
     def update(
         self, pacman_x: float, pacman_y: float, pacman_direction: Tuple[int, int]
