@@ -117,7 +117,6 @@ def test_draw_normal(concrete_ghost, mocker: MockerFixture):
     assert mock_rect.call_count >= 1
 
     # Check color used (Red)
-    # call_args_list[0] is the first call, args[1] is the color
     args, _ = mock_circle.call_args_list[0]
     assert args[1] == (255, 0, 0)
 
@@ -127,7 +126,6 @@ def test_draw_frightened(concrete_ghost, mocker: MockerFixture):
     concrete_ghost.start_frightened()
     screen_mock = mocker.Mock()
     mock_circle = mocker.patch("pygame.draw.circle")
-    # We patch rect just to ensure it's called/not errored, though primarily checking color
     mocker.patch("pygame.draw.rect")
 
     concrete_ghost.draw(screen_mock)

@@ -6,14 +6,14 @@ Uses pytest-mock for patching.
 # pylint: disable=redefined-outer-name
 # pylint: disable=protected-access
 
-import pygame
 import pytest
 from pytest_mock import MockerFixture
+import pygame
 
+from src.pacman import PacMan
 from src.direction import Direction
 from src.ghost import Ghost
-from src.pacman import PacMan
-from src.settings import SCREEN_WIDTH, TILE_SIZE
+from src.settings import TILE_SIZE, SCREEN_WIDTH
 
 
 @pytest.fixture

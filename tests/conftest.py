@@ -1,5 +1,6 @@
 """
 Shared fixtures for pytest.
+This file must be named conftest.py for pytest to discover fixtures automatically.
 """
 
 import pytest
@@ -12,7 +13,6 @@ from src.settings import TILE_SIZE
 @pytest.fixture
 def mock_game_map(mocker: MockerFixture):
     """Creates a mock game map for testing using pytest-mock."""
-    # Usa mocker.Mock invece di unittest.mock.MagicMock
     m = mocker.Mock(spec=GameMap)
 
     # Configura attributi base
@@ -28,8 +28,7 @@ def mock_game_map(mocker: MockerFixture):
         gy * TILE_SIZE + TILE_SIZE / 2,
     )
 
-    # Mock pixel_to_grid (utile per alcuni test di movimento)
-    # Implementazione semplice che inverte la logica sopra approssimativamente
+    # Mock pixel_to_grid
     m.pixel_to_grid.side_effect = lambda px, py: (
         int(px // TILE_SIZE),
         int(py // TILE_SIZE),
