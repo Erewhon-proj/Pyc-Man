@@ -14,7 +14,6 @@ from src.direction import Direction
 from src.ghost import Ghost, GhostConfig, GhostHouseState, GhostState
 from src.position import Position
 from src.settings import GHOST_SPEED, TILE_SIZE
-from tests.test_game_map import *
 
 
 @pytest.fixture
