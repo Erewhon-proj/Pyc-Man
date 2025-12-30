@@ -35,7 +35,7 @@ class PacMan:
         # Animation state
         self.mouth_open_angle = 0
         self.animation_speed = 0.2
-        self.animation_counter = 0
+        self.animation_counter = 0.0  # Fixed: float initialization
         self.mouth_closing = True
 
         # Power up state
@@ -213,7 +213,7 @@ class PacMan:
 
         self.animation_counter += self.animation_speed
         if self.animation_counter >= 1:
-            self.animation_counter = 0
+            self.animation_counter = 0.0
             if self.mouth_closing:
                 self.mouth_open_angle += 5
                 if self.mouth_open_angle >= 45:
@@ -253,7 +253,8 @@ class PacMan:
                 angle = start_angle + i * step_angle
                 px = center[0] + radius * math.cos(angle)
                 py = center[1] - radius * math.sin(angle)
-                points.append((px, py))
+                # Fixed: Cast to int to match points type List[Tuple[int, int]]
+                points.append((int(px), int(py)))
 
             pygame.draw.polygon(screen, color, points)
 
