@@ -1,6 +1,9 @@
-from unittest.mock import ANY, MagicMock, patch
+# pylint: disable=missing-module-docstring
+# pylint: disable=redefined-outer-name
+# pylint: disable=protected-access
 
-import pygame
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 from src.direction import Direction
@@ -42,8 +45,12 @@ def concrete_ghost(mock_game_map, ghost_config):
     """Concrete Ghost instance (since Ghost is abstract)."""
 
     class TestGhost(Ghost):
-        def calculate_target(self, px, py, pdir):
-            return px, py
+        """Concrete implementation for testing."""
+
+        def calculate_target(
+            self, pacman_x: float, pacman_y: float, pacman_direction: tuple[int, int]
+        ) -> tuple[float, float]:
+            return pacman_x, pacman_y
 
     return TestGhost(mock_game_map, ghost_config)
 
@@ -61,7 +68,7 @@ def test_start_frightened(concrete_ghost):
 
     assert concrete_ghost._state == GhostState.FRIGHTENED
     assert concrete_ghost._frightened_timer == 600
-    assert concrete_ghost._speed == 1  # Reduced speed
+    assert concrete_ghost._speed == 1
     # Verify direction reversal
     assert concrete_ghost._direction == Direction.RIGHT
 
@@ -69,7 +76,7 @@ def test_start_frightened(concrete_ghost):
 def test_frightened_timer_update(concrete_ghost):
     """Tests that frightened timer decrements and resets state."""
     concrete_ghost.start_frightened()
-    concrete_ghost._frightened_timer = 1  # Nearly finished
+    concrete_ghost._frightened_timer = 1
 
     # Update call (pacman position irrelevant for this test)
     concrete_ghost.update(0, 0, (0, 0))
@@ -83,10 +90,10 @@ def test_get_eaten(concrete_ghost):
     concrete_ghost.get_eaten()
 
     assert concrete_ghost._state == GhostState.EATEN
-    assert concrete_ghost._speed == 4  # Fast return speed
+    assert concrete_ghost._speed == 4
 
 
-def test_eaten_return_to_house(concrete_ghost, mock_game_map):
+def test_eaten_return_to_house(concrete_ghost):
     """Tests respawning when EATEN ghost reaches house."""
     concrete_ghost.get_eaten()
 
@@ -94,9 +101,6 @@ def test_eaten_return_to_house(concrete_ghost, mock_game_map):
     exit_pos = concrete_ghost._house_exit
     concrete_ghost._position.x = exit_pos.x
     concrete_ghost._position.y = exit_pos.y
-
-    # Mocking distance check effectively
-    # logic: if distance < TILE_SIZE -> respawn
 
     concrete_ghost.update(0, 0, (0, 0))
 
@@ -120,31 +124,29 @@ def test_draw_normal(concrete_ghost):
     with patch("pygame.draw.circle") as mock_circle, patch(
         "pygame.draw.rect"
     ) as mock_rect:
+
         concrete_ghost.draw(screen_mock)
 
         # Should draw body (circle + rect) and feet (circles) + eyes
-        assert mock_circle.call_count >= 1  # Head + feet + eyes
-        assert mock_rect.call_count >= 1  # Body
+        assert mock_circle.call_count >= 1
+        assert mock_rect.call_count >= 1
 
         # Check color used (Red)
         args, _ = mock_circle.call_args_list[0]
-        assert args[1] == (255, 0, 0)  # Color arg
+        assert args[1] == (255, 0, 0)
 
 
 def test_draw_frightened(concrete_ghost):
-    """Tests drawing calls in frightened state (Blue)."""
+    """Tests drawing calls in frightened state."""
     concrete_ghost.start_frightened()
     screen_mock = MagicMock()
 
-    with patch("pygame.draw.circle") as mock_circle, patch(
-        "pygame.draw.rect"
-    ) as mock_rect:
+    with patch("pygame.draw.circle") as mock_circle, patch("pygame.draw.rect"):
+
         concrete_ghost.draw(screen_mock)
 
-        # Check color used (Frightened Blue from settings, usually dark blue)
-        # Using ANY because exact color tuple depends on settings import
         args, _ = mock_circle.call_args_list[0]
-        # Verify it's NOT red
+        # Verify it's NOT red (it is blue or white)
         assert args[1] != (255, 0, 0)
 
 
@@ -156,11 +158,11 @@ def test_draw_eaten(concrete_ghost):
     with patch("pygame.draw.circle") as mock_circle, patch(
         "pygame.draw.rect"
     ) as mock_rect:
+
         concrete_ghost.draw(screen_mock)
 
         # Should NOT draw body rect
         mock_rect.assert_not_called()
-
         # Should draw eyes (circles)
         assert mock_circle.call_count > 0
 
@@ -168,10 +170,9 @@ def test_draw_eaten(concrete_ghost):
 def test_random_direction_when_frightened(concrete_ghost, mock_game_map):
     """Tests that ghost picks random direction when frightened."""
     concrete_ghost.start_frightened()
-    concrete_ghost._position = Position(150, 150)  # Center of tile
+    concrete_ghost._position = Position(150, 150)
 
     # Mock multiple available directions
-    # Using side_effect to allow movement in all directions
     mock_game_map.is_walkable.return_value = True
 
     with patch("random.choice") as mock_random:
@@ -179,5 +180,4 @@ def test_random_direction_when_frightened(concrete_ghost, mock_game_map):
         concrete_ghost._choose_direction()
 
         assert concrete_ghost._direction == Direction.UP
-        # Verify random.choice was called with a list of directions
         mock_random.assert_called()

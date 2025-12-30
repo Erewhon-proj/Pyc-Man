@@ -1,19 +1,28 @@
+"""Pac-Man character module.
+
+This module defines the PacMan class, handling movement, input, and interaction.
+"""
+
 import math
-from typing import List, Optional, Tuple
+from typing import List
 
 import pygame
 
 from src.direction import Direction
 from src.game_map import GameMap
-from src.ghost import Ghost, GhostHouseState
+from src.ghost import Ghost
 from src.position import Position
-from src.settings import FPS, SCREEN_HEIGHT, SCREEN_WIDTH, TILE_SIZE, WHITE, YELLOW
+from src.settings import FPS, SCREEN_WIDTH, TILE_SIZE, YELLOW
 
 
 class PacMan:
     """Class representing the player (Pac-Man)."""
 
+    # Game entities inherently need many attributes for state management
+    # pylint: disable=too-many-instance-attributes
+
     def __init__(self, game_map: GameMap, start_x: float, start_y: float):
+        """Initialize Pac-Man."""
         self.game_map = game_map
         self.position = Position(start_x, start_y)
         self.direction = Direction.NONE
@@ -32,14 +41,16 @@ class PacMan:
         # Power up state
         self.powered_up = False
         self.power_up_timer = 0
-        self.POWER_UP_DURATION = 10 * FPS
+        self.power_up_duration = 10 * FPS
 
     @property
     def x(self) -> float:
+        """Get X position."""
         return self.position.x
 
     @property
     def y(self) -> float:
+        """Get Y position."""
         return self.position.y
 
     def handle_input(self) -> None:
@@ -108,7 +119,7 @@ class PacMan:
         if grid_x < 0:
             self.position.x = SCREEN_WIDTH - TILE_SIZE
             return
-        elif grid_x >= self.game_map.width:
+        if grid_x >= self.game_map.width:
             self.position.x = 0
             return
 
@@ -117,7 +128,6 @@ class PacMan:
         next_grid_y = grid_y + dy
 
         can_move = True
-
         center_x, center_y = self.game_map.grid_to_pixel(grid_x, grid_y)
         dist_from_center = 0
 
@@ -168,7 +178,7 @@ class PacMan:
     def _activate_power_up(self) -> None:
         """Activates power-up mode."""
         self.powered_up = True
-        self.power_up_timer = self.POWER_UP_DURATION
+        self.power_up_timer = self.power_up_duration
 
     def _update_power_up(self) -> None:
         """Updates the power-up timer."""
@@ -187,7 +197,7 @@ class PacMan:
             if dist < hitbox_radius * 2:
                 if self.powered_up and not ghost.in_ghost_house:
                     self.score += 200
-                    ghost.return_to_house()
+                    ghost.get_eaten()
                 elif not self.powered_up and not ghost.in_ghost_house:
                     self._die()
 

@@ -1,3 +1,7 @@
+# pylint: disable=missing-module-docstring
+# pylint: disable=redefined-outer-name
+# pylint: disable=protected-access
+
 from unittest.mock import MagicMock, patch
 
 import pygame
@@ -170,6 +174,8 @@ def test_ghost_collision_eat_ghost(pacman):
 
     pacman.update([ghost])
 
-    assert pacman.lives == 3  # Should not die
-    assert pacman.score == 200  # Eating score
-    ghost.return_to_house.assert_called_once()
+    # Should not die
+    assert pacman.lives == 3
+    # Eating score
+    assert pacman.score == 200
+    ghost.get_eaten.assert_called_once()
