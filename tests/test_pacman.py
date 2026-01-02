@@ -13,7 +13,7 @@ from pytest_mock import MockerFixture
 from src.direction import Direction
 from src.ghost import Ghost
 from src.pacman import PacMan
-from src.settings import SCREEN_WIDTH, TILE_SIZE
+from src.settings import TILE_SIZE
 
 
 @pytest.fixture
@@ -100,10 +100,10 @@ def test_tunnel_wrapping(pacman):
     pacman.direction = Direction.LEFT
     pacman.position.x = 0
 
-    # Moving left at x=0 should wrap to screen width
     pacman.update([])
 
-    assert pacman.x == SCREEN_WIDTH - TILE_SIZE
+    expected_x = pacman.game_map.width * TILE_SIZE - 2  # 600 - 2 = 598
+    assert pacman.x == expected_x
 
 
 def test_eat_pellet(pacman, mock_game_map):
