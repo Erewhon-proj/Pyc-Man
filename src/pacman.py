@@ -12,7 +12,7 @@ from src.direction import Direction
 from src.game_map import GameMap
 from src.ghost import Ghost
 from src.position import Position
-from src.settings import FPS, SCREEN_WIDTH, TILE_SIZE, YELLOW
+from src.settings import FPS, TILE_SIZE, YELLOW
 
 
 class PacMan:
@@ -112,45 +112,44 @@ class PacMan:
         new_x = self.position.x + dx * self.speed
         new_y = self.position.y + dy * self.speed
 
-        check_pos = Position(new_x, new_y)
-        grid_x, grid_y = check_pos.to_grid()
+        # Handle tunnel wrapping BEFORE checking walkability
+        map_width_pixels = self.game_map.width * TILE_SIZE
+        if new_x < 0:
+            new_x += map_width_pixels
+        elif new_x >= map_width_pixels:
+            new_x -= map_width_pixels
 
-        # Tunnel handling
-        if grid_x < 0:
-            self.position.x = SCREEN_WIDTH - TILE_SIZE
-            return
-        if grid_x >= self.game_map.width:
-            self.position.x = 0
-            return
+        # Get current grid position
+        grid_x, grid_y = self.game_map.pixel_to_grid(self.position.x, self.position.y)
+        center_x, center_y = self.game_map.grid_to_pixel(grid_x, grid_y)
 
-        # Wall collision check
+        # Check the next tile in the direction of movement
         next_grid_x = grid_x + dx
         next_grid_y = grid_y + dy
 
+        # Wrap next_grid_x for tunnel
+        if next_grid_x < 0:
+            next_grid_x = self.game_map.width - 1
+        elif next_grid_x >= self.game_map.width:
+            next_grid_x = 0
+
+        # Check if moving past center toward a wall
         can_move = True
-        center_x, center_y = self.game_map.grid_to_pixel(grid_x, grid_y)
-        dist_from_center = 0
-
-        if self.direction in [Direction.LEFT, Direction.RIGHT]:
-            dist_from_center = abs(new_x - center_x)
-        else:
-            dist_from_center = abs(new_y - center_y)
-
-        # If crossing tile center into a wall, stop at center
-        if dist_from_center >= 0 and not self.game_map.is_walkable(
-            next_grid_x, next_grid_y
-        ):
-            blocked = False
+        if not self.game_map.is_walkable(next_grid_x, next_grid_y):
+            # Block if trying to move past center toward wall
             if self.direction == Direction.RIGHT and new_x > center_x:
-                blocked = True
-            if self.direction == Direction.LEFT and new_x < center_x:
-                blocked = True
-            if self.direction == Direction.DOWN and new_y > center_y:
-                blocked = True
-            if self.direction == Direction.UP and new_y < center_y:
-                blocked = True
-
-            if blocked:
+                self.position.x = center_x
+                self.position.y = center_y
+                can_move = False
+            elif self.direction == Direction.LEFT and new_x < center_x:
+                self.position.x = center_x
+                self.position.y = center_y
+                can_move = False
+            elif self.direction == Direction.DOWN and new_y > center_y:
+                self.position.x = center_x
+                self.position.y = center_y
+                can_move = False
+            elif self.direction == Direction.UP and new_y < center_y:
                 self.position.x = center_x
                 self.position.y = center_y
                 can_move = False

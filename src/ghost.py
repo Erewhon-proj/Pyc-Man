@@ -293,16 +293,15 @@ class Ghost(ABC):
         new_x: float = self._position.x + dx * self._speed
         new_y: float = self._position.y + dy * self._speed
 
+        # Handle tunnel wrapping BEFORE checking walkability
+        map_width_pixels: float = self._game_map.width * settings.TILE_SIZE
+        if new_x < 0:
+            new_x += map_width_pixels
+        elif new_x >= map_width_pixels:
+            new_x -= map_width_pixels
+
         new_position = Position(new_x, new_y)
         new_grid_x, new_grid_y = new_position.to_grid()
-
-        # Tunnel Handling
-        if new_grid_x < 0:
-            self._position.x = settings.SCREEN_WIDTH - settings.TILE_SIZE
-            return
-        if new_grid_x >= self._game_map.width:
-            self._position.x = 0
-            return
 
         if self._game_map.is_walkable(new_grid_x, new_grid_y):
             self._position.x = new_x
