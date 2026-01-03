@@ -163,3 +163,83 @@ def test_ghost_collision_eat_ghost(pacman, mocker: MockerFixture):
     # Eating score
     assert pacman.score == 200
     ghost.get_eaten.assert_called_once()
+
+
+# Cornering tests
+
+
+@pytest.mark.parametrize(
+    "offset_x,offset_y,expected",
+    [
+        (0, 0, True),  # Centered
+        (7, 0, True),  # Within tolerance
+        (0, 7, True),  # Within tolerance
+        (7, 7, True),  # Within tolerance diagonally
+        (9, 0, False),  # Outside tolerance
+        (0, 9, False),  # Outside tolerance
+    ],
+)
+def test_can_turn_tolerance(pacman, offset_x: int, offset_y: int, expected: bool):
+    """Tests _can_turn() with various distances from tile center."""
+    center_x, center_y = pacman.game_map.grid_to_pixel(1, 1)
+    pacman.position.x = center_x + offset_x
+    pacman.position.y = center_y + offset_y
+
+    assert pacman._can_turn() == expected
+
+
+def test_smart_snap_horizontal_to_vertical(pacman):
+    """Tests smart snap when turning from horizontal to vertical movement."""
+    center_x, center_y = pacman.game_map.grid_to_pixel(1, 1)
+    pacman.position.x = center_x + 5
+    pacman.position.y = center_y - 3
+    pacman.direction = Direction.RIGHT
+    pacman.next_direction = Direction.UP
+
+    pacman._try_change_direction()
+
+    assert pacman.position.x == center_x
+    assert pacman.position.y == center_y - 3
+    assert pacman.direction == Direction.UP
+
+
+def test_smart_snap_vertical_to_horizontal(pacman):
+    """Tests smart snap when turning from vertical to horizontal movement."""
+    center_x, center_y = pacman.game_map.grid_to_pixel(1, 1)
+    pacman.position.x = center_x - 4
+    pacman.position.y = center_y + 6
+    pacman.direction = Direction.DOWN
+    pacman.next_direction = Direction.RIGHT
+
+    pacman._try_change_direction()
+
+    assert pacman.position.x == center_x - 4
+    assert pacman.position.y == center_y
+    assert pacman.direction == Direction.RIGHT
+
+
+def test_reverse_direction_no_snap(pacman):
+    """Tests that reversing direction happens immediately without snap."""
+    center_x, center_y = pacman.game_map.grid_to_pixel(1, 1)
+    pacman.position.x = center_x + 5
+    pacman.position.y = center_y + 3
+    pacman.direction = Direction.RIGHT
+    pacman.next_direction = Direction.LEFT
+
+    pacman._try_change_direction()
+
+    assert pacman.position.x == center_x + 5
+    assert pacman.position.y == center_y + 3
+    assert pacman.direction == Direction.LEFT
+
+
+def test_turn_blocked_by_wall(pacman, mock_game_map):
+    """Tests that turning is blocked when target tile is not walkable."""
+    pacman.direction = Direction.RIGHT
+    pacman.next_direction = Direction.UP
+    mock_game_map.is_walkable.return_value = False
+
+    pacman._try_change_direction()
+
+    assert pacman.direction == Direction.RIGHT
+    assert pacman.next_direction == Direction.UP

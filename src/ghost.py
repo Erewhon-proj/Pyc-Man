@@ -208,6 +208,11 @@ class Ghost(ABC):
             and abs(self._position.y - center_y) < tolerance
         )
 
+    def _is_in_tunnel(self) -> bool:
+        """Check if ghost is in the horizontal tunnel."""
+        _, grid_y = self._position.to_grid()
+        return grid_y == settings.TUNNEL_ROW
+
     def _is_opposite_direction(self, direction: Direction) -> bool:
         """Check if given direction is opposite to current direction."""
         dx, dy = direction.value
@@ -290,8 +295,13 @@ class Ghost(ABC):
     def _move(self) -> None:
         """Move the ghost in the current direction."""
         dx, dy = self._direction.value
-        new_x: float = self._position.x + dx * self._speed
-        new_y: float = self._position.y + dy * self._speed
+        # Apply tunnel slowdown if in tunnel
+        speed_multiplier = (
+            settings.TUNNEL_SPEED_MULTIPLIER if self._is_in_tunnel() else 1.0
+        )
+        effective_speed = self._speed * speed_multiplier
+        new_x: float = self._position.x + dx * effective_speed
+        new_y: float = self._position.y + dy * effective_speed
 
         # Handle tunnel wrapping BEFORE checking walkability
         map_width_pixels: float = self._game_map.width * settings.TILE_SIZE

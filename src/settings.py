@@ -16,6 +16,10 @@ CLYDE_SCATTER_DISTANCE_TILES = 8
 GHOST_HOUSE_EXIT_X = 13.5
 GHOST_HOUSE_EXIT_Y = 11.5
 
+# Tunnel settings
+TUNNEL_ROW = 10  # The row where the horizontal tunnel is located
+TUNNEL_SPEED_MULTIPLIER = 0.4  # Ghosts slow to 40% in tunnel
+
 
 # Colors
 BLACK = (0, 0, 0)

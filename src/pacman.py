@@ -29,13 +29,15 @@ class PacMan:
         self.next_direction = Direction.NONE  # Input buffering
 
         self.speed = 2  # Pixels per frame
+        self.speed_multiplier = 1.0  # Speed modifier (1.0 = normal)
+        self.eating_timer = 0  # Frames of slowdown when eating
         self.score = 0
         self.lives = 3
 
         # Animation state
         self.mouth_open_angle = 0
         self.animation_speed = 0.2
-        self.animation_counter = 0.0  # Fixed: float initialization
+        self.animation_counter = 0.0
         self.mouth_closing = True
 
         # Power up state
@@ -73,6 +75,7 @@ class PacMan:
         self._animate()
         self._check_pellet_collision()
         self._update_power_up()
+        self._update_eating_timer()
         self._check_ghost_collisions(ghosts)
 
     def _try_change_direction(self) -> None:
@@ -88,17 +91,22 @@ class PacMan:
             self.next_direction = Direction.NONE
             return
 
-        # Otherwise, must be centered on tile to turn
-        if self._is_centered_on_tile():
+        # Pac-Man can pre-turn before reaching exact center (cornering)
+        if self._can_turn():
             grid_x, grid_y = self.position.to_grid()
             dx, dy = self.next_direction.value
 
             # Check if the target tile is free
             if self.game_map.is_walkable(grid_x + dx, grid_y + dy):
-                # Center perfectly before turning to avoid misalignment
+                # Center only the axis we're LEAVING (old direction)
                 pixel_x, pixel_y = self.game_map.grid_to_pixel(grid_x, grid_y)
-                self.position.x = pixel_x
-                self.position.y = pixel_y
+
+                if self.direction in [Direction.LEFT, Direction.RIGHT]:
+                    # Was moving horizontally → snap X only
+                    self.position.x = pixel_x
+                elif self.direction in [Direction.UP, Direction.DOWN]:
+                    # Was moving vertically → snap Y only
+                    self.position.y = pixel_y
 
                 self.direction = self.next_direction
                 self.next_direction = Direction.NONE
@@ -109,8 +117,9 @@ class PacMan:
             return
 
         dx, dy = self.direction.value
-        new_x = self.position.x + dx * self.speed
-        new_y = self.position.y + dy * self.speed
+        effective_speed = self.speed * self.speed_multiplier
+        new_x = self.position.x + dx * effective_speed
+        new_y = self.position.y + dy * effective_speed
 
         # Handle tunnel wrapping BEFORE checking walkability
         map_width_pixels = self.game_map.width * TILE_SIZE
@@ -169,10 +178,16 @@ class PacMan:
             if cell_value == 2:  # Normal Pellet
                 self.game_map.set_cell(grid_x, grid_y, 0)
                 self.score += 10
+                # Trigger eating slowdown (87% of normal speed)
+                self.eating_timer = 1
+                self.speed_multiplier = 0.87
             elif cell_value == 3:  # Power Pellet
                 self.game_map.set_cell(grid_x, grid_y, 0)
                 self.score += 50
                 self._activate_power_up()
+                # idem
+                self.eating_timer = 1
+                self.speed_multiplier = 0.87
 
     def _activate_power_up(self) -> None:
         """Activates power-up mode."""
@@ -185,6 +200,13 @@ class PacMan:
             self.power_up_timer -= 1
             if self.power_up_timer <= 0:
                 self.powered_up = False
+
+    def _update_eating_timer(self) -> None:
+        """Updates the eating slowdown timer."""
+        if self.eating_timer > 0:
+            self.eating_timer -= 1
+            if self.eating_timer == 0:
+                self.speed_multiplier = 1.0  # Restore normal speed
 
     def _check_ghost_collisions(self, ghosts: List[Ghost]) -> None:
         """Handles collisions with ghosts."""
@@ -262,6 +284,16 @@ class PacMan:
         center_x, center_y = self.game_map.grid_to_pixel(grid_x, grid_y)
         return (
             abs(self.position.x - center_x) < 2 and abs(self.position.y - center_y) < 2
+        )
+
+    def _can_turn(self) -> bool:
+        """Check if Pac-Man can turn"""
+        grid_x, grid_y = self.position.to_grid()
+        center_x, center_y = self.game_map.grid_to_pixel(grid_x, grid_y)
+        turn_tolerance = 8  # Pac-Man can pre-turn ~8 pixels before center
+        return (
+            abs(self.position.x - center_x) < turn_tolerance
+            and abs(self.position.y - center_y) < turn_tolerance
         )
 
     def _is_opposite_direction(self, direction: Direction) -> bool:
