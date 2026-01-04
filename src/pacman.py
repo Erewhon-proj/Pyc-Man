@@ -73,7 +73,7 @@ class PacMan:
         self._try_change_direction()
         self._move()
         self._animate()
-        self._check_pellet_collision()
+        self._check_pellet_collision(ghosts)
         self._update_power_up()
         self._update_eating_timer()
         self._check_ghost_collisions(ghosts)
@@ -167,7 +167,7 @@ class PacMan:
             self.position.x = new_x
             self.position.y = new_y
 
-    def _check_pellet_collision(self) -> None:
+    def _check_pellet_collision(self, ghosts: List[Ghost]) -> None:
         """Eats pellet or power pellet if at tile center."""
         grid_x, grid_y = self.position.to_grid()
         cell_value = self.game_map.get_cell(grid_x, grid_y)
@@ -185,6 +185,8 @@ class PacMan:
                 self.game_map.set_cell(grid_x, grid_y, 0)
                 self.score += 50
                 self._activate_power_up()
+                for ghost in ghosts:
+                    ghost.start_frightened()
                 # idem
                 self.eating_timer = 1
                 self.speed_multiplier = 0.87
@@ -216,10 +218,10 @@ class PacMan:
             dist = math.sqrt((self.x - ghost.x) ** 2 + (self.y - ghost.y) ** 2)
 
             if dist < hitbox_radius * 2:
-                if self.powered_up and not ghost.in_ghost_house:
+                if ghost.is_frightened:
                     self.score += 200
                     ghost.get_eaten()
-                elif not self.powered_up and not ghost.in_ghost_house:
+                elif not ghost.is_eaten and not ghost.in_ghost_house:
                     self._die()
 
     def _die(self) -> None:
