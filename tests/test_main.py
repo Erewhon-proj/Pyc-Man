@@ -2,7 +2,6 @@
 Basic tests for main module
 """
 
-import pytest
 from pytest_mock import MockerFixture
 
 from src.main import handle_ghost_release, main

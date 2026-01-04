@@ -1,7 +1,5 @@
 """Integration tests to verify main configuration aligns with game logic"""
 
-import pytest
-
 from src.game_map import GameMap
 from src.settings import TILE_SIZE
 

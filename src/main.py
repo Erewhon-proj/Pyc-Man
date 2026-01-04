@@ -36,9 +36,9 @@ def main() -> None:
     game_map = GameMap()
 
     # Pacman creation
-    start_x = 9 * TILE_SIZE + TILE_SIZE / 2
-    start_y = 16 * TILE_SIZE + TILE_SIZE / 2  # Fix to stay visible on map
-    pacman = PacMan(game_map, start_x, start_y)
+    pacman = PacMan(
+        game_map, 9 * TILE_SIZE + TILE_SIZE / 2, 16 * TILE_SIZE + TILE_SIZE / 2
+    )
 
     # Ghost creation
     blinky = Blinky(game_map, 9.5 * TILE_SIZE, 8.5 * TILE_SIZE)
@@ -50,7 +50,7 @@ def main() -> None:
 
     ghost_release_timer = 0  # Counter to relase ghosts
 
-    """Main loop"""
+    # ----Main loop----------
     running = True
     while running:
         # Events handler
