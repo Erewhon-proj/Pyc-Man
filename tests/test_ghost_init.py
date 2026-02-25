@@ -4,7 +4,7 @@ Tests for ghost_init.py
 
 from pytest_mock import MockerFixture
 
-from src.ghost import Blinky, Clyde, GhostState, Inky, Pinky
+from src.ghost import GhostState
 from src.ghost_init import (
     get_ghost_mode,
     ghost_creation,

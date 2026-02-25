@@ -3,7 +3,7 @@
 from typing import List
 
 from src.game_map import GameMap
-from src.ghost import Ghost, GhostState
+from src.ghost import Blinky, Clyde, Ghost, GhostState, Inky, Pinky
 from src.settings import GHOST_MODE_CYCLES, TILE_SIZE
 
 
