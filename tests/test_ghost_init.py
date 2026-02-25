@@ -96,13 +96,13 @@ def test_ghost_creation(mocker: MockerFixture):
     # Mock TILE_SIZE to simplify calculations and avoid dependency on settings.py
     mocker.patch("src.ghost_init.TILE_SIZE", 16)
 
-    ghosts = ghost_creation(mock_map)
-
     # Mocking ghosts
     mock_blinky = mocker.patch("src.ghost_init.Blinky")
     mock_inky = mocker.patch("src.ghost_init.Inky")
     mocker.patch("src.ghost_init.Pinky")
     mocker.patch("src.ghost_init.Clyde")
+
+    ghosts = ghost_creation(mock_map)
 
     assert len(ghosts) == 4
     mock_blinky_instance = mock_blinky.return_value
