@@ -89,24 +89,134 @@ class GameMap:
         return len(self.layout[0]) if self.layout else 0
 
     def draw(self, screen: pygame.Surface):
-        """Render the map"""
-        for y, row in enumerate(self.layout):
-            for x, cell in enumerate(row):
+        """Render all map elements."""
+        self._draw_walls(screen)
+        self._draw_pellets(screen)
+
+    def _is_visual_wall(self, grid_x: int, grid_y: int) -> bool:
+        """Check if a cell is a wall, treating out-of-bounds tunnel areas as open paths."""
+        tunnel_row = 10  # Consider moving this to settings.py if it changes
+        if grid_y == tunnel_row and (grid_x < 0 or grid_x >= self.width):
+            return False
+        return self.is_wall(grid_x, grid_y)
+
+    def _draw_clipped_corner(
+        self,
+        screen: pygame.Surface,
+        clip_rect: tuple,
+        center: tuple,
+        radius: int,
+        thickness: int,
+    ):
+        """Draw a perfect quadrant by using a clipping mask to bypass Pygame rendering bugs."""
+        screen.set_clip(pygame.Rect(*clip_rect))
+        pygame.draw.circle(screen, BLUE, center, radius, thickness)
+        screen.set_clip(None)
+
+    def _draw_walls(self, screen: pygame.Surface):
+        """Calculate boundaries and render the labyrinth walls with rounded corners."""
+        thickness = 2
+        r = 8  # Corner radius
+
+        for y in range(self.height + 1):
+            for x in range(self.width + 1):
                 px, py = x * TILE_SIZE, y * TILE_SIZE
 
-                if cell == 1:
-                    # Wall
-                    pygame.draw.rect(screen, BLUE, (px, py, TILE_SIZE, TILE_SIZE))
+                # Boundary detection
+                bE = x < self.width and self._is_visual_wall(
+                    x, y - 1
+                ) != self._is_visual_wall(x, y)
+                bS = y < self.height and self._is_visual_wall(
+                    x - 1, y
+                ) != self._is_visual_wall(x, y)
+                bW = x > 0 and self._is_visual_wall(
+                    x - 1, y - 1
+                ) != self._is_visual_wall(x - 1, y)
+                bN = y > 0 and self._is_visual_wall(
+                    x - 1, y - 1
+                ) != self._is_visual_wall(x, y - 1)
 
-                elif cell == 2:
-                    # Pellet with glow
-                    center = (px + TILE_SIZE // 2, py + TILE_SIZE // 2)
-                    pygame.draw.circle(screen, (255, 255, 200, 50), center, 5)
-                    pygame.draw.circle(screen, WHITE, center, 3)
+                # Draw straight segments
+                if bE:
+                    pygame.draw.line(
+                        screen, BLUE, (px + r, py), (px + TILE_SIZE - r, py), thickness
+                    )
+                if bS:
+                    pygame.draw.line(
+                        screen, BLUE, (px, py + r), (px, py + TILE_SIZE - r), thickness
+                    )
+
+                # Handle intersections and corners
+                b_count = bN + bS + bE + bW
+
+                if b_count == 2:
+                    if bN and bS:
+                        pygame.draw.line(
+                            screen, BLUE, (px, py - r), (px, py + r), thickness
+                        )
+                    elif bE and bW:
+                        pygame.draw.line(
+                            screen, BLUE, (px - r, py), (px + r, py), thickness
+                        )
+                    elif bN and bE:
+                        self._draw_clipped_corner(
+                            screen, (px, py - r, r, r), (px + r, py - r), r, thickness
+                        )
+                    elif bN and bW:
+                        self._draw_clipped_corner(
+                            screen,
+                            (px - r, py - r, r, r),
+                            (px - r, py - r),
+                            r,
+                            thickness,
+                        )
+                    elif bS and bE:
+                        self._draw_clipped_corner(
+                            screen, (px, py, r, r), (px + r, py + r), r, thickness
+                        )
+                    elif bS and bW:
+                        self._draw_clipped_corner(
+                            screen, (px - r, py, r, r), (px - r, py + r), r, thickness
+                        )
+                elif b_count != 0:
+                    # Anchor lines to the grid edge for tunnel exits and dead ends
+                    if bN:
+                        pygame.draw.line(
+                            screen, BLUE, (px, py - r), (px, py), thickness
+                        )
+                    if bS:
+                        pygame.draw.line(
+                            screen, BLUE, (px, py + r), (px, py), thickness
+                        )
+                    if bE:
+                        pygame.draw.line(
+                            screen, BLUE, (px + r, py), (px, py), thickness
+                        )
+                    if bW:
+                        pygame.draw.line(
+                            screen, BLUE, (px - r, py), (px, py), thickness
+                        )
+
+    def _draw_pellets(self, screen: pygame.Surface):
+        """Render normal and power pellets across the map."""
+        for y, row in enumerate(self.layout):
+            for x, cell in enumerate(row):
+                # Skip empty paths or walls
+                if cell not in (2, 3):
+                    continue
+
+                center_x = (x * TILE_SIZE) + (TILE_SIZE // 2)
+                center_y = (y * TILE_SIZE) + (TILE_SIZE // 2)
+                center = (center_x, center_y)
+
+                if cell == 2:
+                    # Regular pellet
+                    pygame.draw.circle(screen, (255, 255, 220), center, 3)
 
                 elif cell == 3:
-                    # Power pellet with animation
-                    center = (px + TILE_SIZE // 2, py + TILE_SIZE // 2)
-                    pulse = abs(math.sin(pygame.time.get_ticks() / 200)) * 3
-                    pygame.draw.circle(screen, (255, 255, 150), center, int(8 + pulse))
-                    pygame.draw.circle(screen, WHITE, center, 6)
+                    # Power pellet with pulsing effect
+                    pulse = abs(math.sin(pygame.time.get_ticks() / 200.0)) * 3
+                    radius = int(7 + pulse)
+
+                    pygame.draw.circle(screen, (255, 255, 150), center, radius)  # Glow
+                    pygame.draw.circle(screen, (255, 255, 255), center, 5)  # Core

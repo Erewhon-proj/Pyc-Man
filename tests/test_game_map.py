@@ -108,6 +108,8 @@ class TestGameMap:
             (1, 1, True),  # Power pellet - walkable
             (2, 1, True),  # Pellet - walkable
             (9, 1, False),  # Wall - not walkable
+            (-1, 10, False),  # Out of bounds in the tunnel -> not a visual wall
+            (19, 10, False),  # Out of bounds in the tunnel -> not a visual wall
         ],
     )
     def test_is_walkable(self, game_map, x, y, expected):
@@ -123,3 +125,17 @@ class TestGameMap:
         """Test width property returns number of columns"""
         assert game_map.width == len(game_map.layout[0])
         assert game_map.width == 19
+
+    def test_is_visual_wall(game_map, x, y, expected):
+        """Test the special logic for wall rendering in tunnels"""
+        # Using _ to access a protected method for testing internal logic
+        # pylint: disable=protected-access
+        assert game_map._is_visual_wall(x, y) == expected
+
+    def test_initial_pellet_count_logic(game_map):
+        """Verify that the counting logic used by _draw_pellets is consistent"""
+        # Count how many cells in the layout are 2 (pellet) or 3 (power pellet)
+        cells_with_pellets = sum(
+            1 for row in game_map.layout for cell in row if cell in (2, 3)
+        )
+        assert game_map.initial_pellets == cells_with_pellets
