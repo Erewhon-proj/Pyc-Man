@@ -95,7 +95,7 @@ class GameMap:
 
     def _is_visual_wall(self, grid_x: int, grid_y: int) -> bool:
         """Check if a cell is a wall, treating out-of-bounds tunnel areas as open paths."""
-        tunnel_row = 10  # Consider moving this to settings.py if it changes
+        tunnel_row = 10
         if grid_y == tunnel_row and (grid_x < 0 or grid_x >= self.width):
             return False
         return self.is_wall(grid_x, grid_y)
