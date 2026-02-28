@@ -123,3 +123,26 @@ class TestGameMap:
         """Test width property returns number of columns"""
         assert game_map.width == len(game_map.layout[0])
         assert game_map.width == 19
+
+    @pytest.mark.parametrize(
+        "x, y, expected",
+        [
+            (0, 0, True),  # Normal wall -> visual wall
+            (1, 1, False),  # Empty space or pellet -> not a visual wall
+            (-1, 10, False),  # Left tunnel out of bounds-> open path (False)
+            (19, 10, False),  # Right Tunnel out of bounds -> open path (False)
+        ],
+    )
+    def test_is_visual_wall(self, game_map, x, y, expected):
+        """Test the special logic for wall rendering in tunnels"""
+        # Using _ to access a protected method for testing internal logic
+        # pylint: disable=protected-access
+        assert game_map._is_visual_wall(x, y) == expected
+
+    def test_initial_pellet_count_logic(self, game_map):
+        """Verify that the counting logic used by _draw_pellets is consistent"""
+        # Count how many cells in the layout are 2 (pellet) or 3 (power pellet)
+        cells_with_pellets = sum(
+            1 for row in game_map.layout for cell in row if cell in (2, 3)
+        )
+        assert game_map.initial_pellets == cells_with_pellets
