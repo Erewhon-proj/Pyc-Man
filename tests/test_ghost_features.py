@@ -174,3 +174,49 @@ def test_random_direction_when_frightened(
 
     assert concrete_ghost._direction == Direction.UP
     mock_choice.assert_called()
+
+
+def test_frightened_state_preserved_after_eaten(concrete_ghost):
+    """Tests that frightened state is restored after ghost respawns."""
+    # Start with frightened state
+    concrete_ghost.start_frightened()
+    initial_timer = 500
+    concrete_ghost._frightened_timer = initial_timer
+
+    # Get eaten
+    concrete_ghost.get_eaten()
+    assert concrete_ghost._state == GhostState.EATEN
+    assert concrete_ghost._saved_frightened_timer == initial_timer
+
+    # Place ghost at house exit to trigger respawn
+    exit_pos = concrete_ghost._house_exit
+    concrete_ghost._position.x = exit_pos.x
+    concrete_ghost._position.y = exit_pos.y
+
+    concrete_ghost.update(0, 0, (0, 0))
+
+    # Should have restored frightened state with remaining timer
+    assert concrete_ghost._state == GhostState.FRIGHTENED
+    assert concrete_ghost._frightened_timer == initial_timer
+    assert concrete_ghost._house_state == GhostHouseState.EXITING
+
+
+def test_not_frightened_preserved_after_eaten(concrete_ghost):
+    """Tests that non-frightened ghost respawns normally."""
+    # Don't start frightened
+    concrete_ghost._state = GhostState.CHASE
+
+    # Get eaten
+    concrete_ghost.get_eaten()
+    assert concrete_ghost._saved_frightened_timer == 0
+
+    # Place ghost at house exit to trigger respawn
+    exit_pos = concrete_ghost._house_exit
+    concrete_ghost._position.x = exit_pos.x
+    concrete_ghost._position.y = exit_pos.y
+
+    concrete_ghost.update(0, 0, (0, 0))
+
+    # Should respawn in SCATTER state (normal behavior)
+    assert concrete_ghost._state == GhostState.SCATTER
+    assert concrete_ghost._house_state == GhostHouseState.EXITING

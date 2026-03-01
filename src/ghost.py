@@ -78,6 +78,7 @@ class Ghost(ABC):
 
         # Animation & Frightened timers
         self._frightened_timer = 0
+        self._saved_frightened_timer = 0  # Saved timer when eaten
         self._animation_frame = 0.0
         self._animation_speed = 0.2
 
@@ -152,6 +153,11 @@ class Ghost(ABC):
 
     def get_eaten(self) -> None:
         """Handle being eaten by Pac-Man."""
+        # Save frightened timer if currently frightened
+        if self._state == GhostState.FRIGHTENED:
+            self._saved_frightened_timer = self._frightened_timer
+        else:
+            self._saved_frightened_timer = 0
         self._state = GhostState.EATEN
         self._speed = settings.GHOST_EATEN_SPEED  # Fast return speed
 
@@ -173,12 +179,14 @@ class Ghost(ABC):
         # 1. Update Animation
         self._animation_frame = (self._animation_frame + self._animation_speed) % 2
 
-        # 2. Handle Frightened Timer
+        # 2. Handle Frightened Timer (continue decrementing even while exiting house)
         if self._state == GhostState.FRIGHTENED:
             self._frightened_timer -= 1
             if self._frightened_timer <= 0:
                 self._state = GhostState.SCATTER
                 self._speed = settings.GHOST_SPEED
+                # Also clear saved timer if we expire naturally
+                self._saved_frightened_timer = 0
 
         # 3. Handle Eaten State (Return to House)
         if self._state == GhostState.EATEN:
@@ -213,8 +221,15 @@ class Ghost(ABC):
 
     def _respawn_in_house(self) -> None:
         """Reset ghost after returning home as eyes."""
-        self._state = GhostState.SCATTER
-        self._speed = settings.GHOST_SPEED
+        # Restore frightened state if the power pellet is still active
+        if self._saved_frightened_timer > 0:
+            self._state = GhostState.FRIGHTENED
+            self._frightened_timer = self._saved_frightened_timer
+            self._speed = settings.GHOST_FRIGHTENED_SPEED
+            self._saved_frightened_timer = 0
+        else:
+            self._state = GhostState.SCATTER
+            self._speed = settings.GHOST_SPEED
         self._position.x = self._spawn_position.x
         self._position.y = self._spawn_position.y
         self._house_state = GhostHouseState.EXITING
