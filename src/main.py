@@ -88,6 +88,8 @@ def main() -> None:  # pylint: disable=too-many-locals
 
         game_map.draw(screen)  # map draw
         pacman.draw(screen)  # Pac-Man draw
+        pacman.draw_score(screen)  # Draw score
+        pacman.draw_lives(screen)  # Draw lives counter
 
         for ghost in ghosts:
             ghost.draw(screen)  # Ghosts draw

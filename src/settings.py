@@ -69,3 +69,23 @@ CYAN = (0, 255, 255)
 ORANGE = (255, 184, 82)
 FRIGHTENED_BLUE = (50, 50, 255)
 FRIGHTENED_WHITE = (200, 200, 255)
+
+# Life system
+STARTING_LIVES = 3
+MAX_LIVES = 10
+EXTRA_LIFE_SCORE = 10000  # Earn an extra life every 10,000 points
+RESPAWN_INVINCIBILITY_FRAMES = 120  # 2 seconds of invincibility after respawn (60 FPS)
+
+# UI layout
+LIVES_DISPLAY_X = 20  # X position for lives display
+LIVES_DISPLAY_Y = SCREEN_HEIGHT - 15  # Y position for lives display (bottom)
+LIVES_ICON_SIZE = 15  # Size of life icons
+LIVES_SPACING = 20  # Space between life icons
+
+# Score display
+SCORE_DISPLAY_X = 20  # X position for score display
+SCORE_DISPLAY_Y = 10  # Y position for score display (top)
+SCORE_FONT_SIZE = 20
+
+# Ghost scoring
+GHOST_BASE_SCORE = 200  # Base score for first frightened ghost
