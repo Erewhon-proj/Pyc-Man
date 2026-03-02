@@ -24,15 +24,18 @@ def load_high_scores() -> List[Dict[str, Union[str, int]]]:
         with open(SCORE_FILE, "r", encoding="utf-8") as file:
             scores = json.load(file)
 
-            processed_scores = []
+            processed_scores: List[Dict[str, Union[str, int]]] = []
             for s in scores:
                 if isinstance(s, int):
                     # Handle legacy integer scores
                     processed_scores.append({"name": "---", "score": s})
-                else:
-                    processed_scores.append(s)
+                elif isinstance(s, dict):
+                    processed_scores.append({
+                        "name": str(s.get("name", "---")),
+                        "score": int(s.get("score", 0))
+                    })
 
-            return sorted(processed_scores, key=lambda x: x["score"], reverse=True)[
+            return sorted(processed_scores, key=lambda x: int(x["score"]), reverse=True)[
                 :MAX_SCORES
             ]
     except (json.JSONDecodeError, IOError):
@@ -103,12 +106,12 @@ def save_high_score(
     scores = load_high_scores()
 
     # Check if the score actually qualifies for the top 10 list
-    if len(scores) < MAX_SCORES or new_score > scores[-1]["score"]:
+    if len(scores) < MAX_SCORES or new_score > int(scores[-1]["score"]):
         name = input_name_screen(screen, clock, new_score)
         scores.append({"name": name, "score": new_score})
 
         # Sort from max to min and save top 10
-        scores = sorted(scores, key=lambda x: x["score"], reverse=True)[:MAX_SCORES]
+        scores = sorted(scores, key=lambda x: itn(x["score"]), reverse=True)[:MAX_SCORES]
 
         try:
             with open(SCORE_FILE, "w", encoding="utf-8") as file:
