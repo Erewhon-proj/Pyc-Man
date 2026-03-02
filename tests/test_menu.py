@@ -58,7 +58,8 @@ def test_show_start_screen_play(mocker, mock_game_elements):
     mock_ghost.draw_on_menu.assert_called()  # Verify ghost loop is covered
 
 
-def test_show_start_screen_high_scores(mocker, mock_game_elements):
+@pytest.mark.usefixtures("mock_game_elements")
+def test_show_start_screen_high_scores(mocker):
     """Test clicking the HIGH SCORES button."""
     screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
     clock = pygame.time.Clock()
