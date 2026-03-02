@@ -46,7 +46,9 @@ class TestMain:
         quit_event = mocker.MagicMock()
         quit_event.type = pygame.QUIT
         mock_pygame.event.get.return_value = [quit_event]
-        mock_pygame.QUIT = pygame.QUIT  # Ensure the mock constant matches pygame's real constant
+        mock_pygame.QUIT = (
+            pygame.QUIT
+        )  # Ensure the mock constant matches pygame's real constant
 
         # Simulate a ghost mode change to hit the 'if new_ghost_mode != current_ghost_mode:' block
         mock_get_ghost_mode.return_value = "CHASE"

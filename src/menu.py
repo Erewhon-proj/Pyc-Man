@@ -1,4 +1,5 @@
 """Main menu module"""
+
 # pylint: disable=duplicate-code
 
 import sys
@@ -13,7 +14,7 @@ from src.settings import BLACK, FPS, SCREEN_HEIGHT, SCREEN_WIDTH, WHITE, YELLOW
 
 
 def show_start_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> str:
-    #pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals
     """Show main menu screen"""
 
     font_title = pygame.font.Font(None, 80)

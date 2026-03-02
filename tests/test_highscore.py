@@ -1,4 +1,5 @@
 """Unit tests for highscore module."""
+
 # pylint: disable=redefined-outer-name
 
 import json
@@ -8,13 +9,13 @@ import pygame
 import pytest
 
 from src.highscore import (
-MAX_SCORES,
-SCORE_FILE,
-load_high_scores,
-save_high_score,
-_draw_scores,
-input_name_screen,
-show_high_scores_screen
+    MAX_SCORES,
+    SCORE_FILE,
+    load_high_scores,
+    save_high_score,
+    _draw_scores,
+    input_name_screen,
+    show_high_scores_screen,
 )
 
 

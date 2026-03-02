@@ -1,4 +1,5 @@
 """Module for handling high scores logic and screens."""
+
 # pylint: disable=duplicate-code
 
 import json
@@ -30,14 +31,16 @@ def load_high_scores() -> List[Dict[str, Union[str, int]]]:
                     # Handle legacy integer scores
                     processed_scores.append({"name": "---", "score": s})
                 elif isinstance(s, dict):
-                    processed_scores.append({
-                        "name": str(s.get("name", "---")),
-                        "score": int(s.get("score", 0))
-                    })
+                    processed_scores.append(
+                        {
+                            "name": str(s.get("name", "---")),
+                            "score": int(s.get("score", 0)),
+                        }
+                    )
 
-            return sorted(processed_scores, key=lambda x: int(x["score"]), reverse=True)[
-                :MAX_SCORES
-            ]
+            return sorted(
+                processed_scores, key=lambda x: int(x["score"]), reverse=True
+            )[:MAX_SCORES]
     except (json.JSONDecodeError, IOError):
         return []
 
@@ -96,6 +99,7 @@ def input_name_screen(
         pygame.display.flip()
         clock.tick(FPS)
 
+
 def save_high_score(
     screen: pygame.Surface, clock: pygame.time.Clock, new_score: int
 ) -> None:
@@ -111,7 +115,9 @@ def save_high_score(
         scores.append({"name": name, "score": new_score})
 
         # Sort from max to min and save top 10
-        scores = sorted(scores, key=lambda x: int(x["score"]), reverse=True)[:MAX_SCORES]
+        scores = sorted(scores, key=lambda x: int(x["score"]), reverse=True)[
+            :MAX_SCORES
+        ]
 
         try:
             with open(SCORE_FILE, "w", encoding="utf-8") as file:
@@ -119,15 +125,14 @@ def save_high_score(
         except IOError as e:
             print(f"Error on high scores saving: {e}")
 
+
 def _draw_scores(
-        screen: pygame.Surface, font_score: pygame.font.Font, scores: List[Dict]
+    screen: pygame.Surface, font_score: pygame.font.Font, scores: List[Dict]
 ) -> None:
     """Helper function to draw the scores list to the screen."""
     if not scores:
         empty_text = font_score.render("No high score yet!", True, WHITE)
-        empty_rect = empty_text.get_rect(
-            center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-        )
+        empty_rect = empty_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
         screen.blit(empty_text, empty_rect)
     else:
         for i, score_data in enumerate(scores):
@@ -141,6 +146,7 @@ def _draw_scores(
                 center=(SCREEN_WIDTH // 2, (SCREEN_HEIGHT // 4) + 20 + (i * 40))
             )
             screen.blit(text_surface, rect)
+
 
 def show_high_scores_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> None:
     """Show top 10 high scores screen"""
