@@ -1,5 +1,6 @@
 """Unit tests to test game_loop module"""
 # pylint: disable=redefined-outer-name
+# pylint: disable=protected-access
 
 import pytest
 

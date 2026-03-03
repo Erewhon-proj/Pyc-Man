@@ -4,7 +4,7 @@ from src.pacman import PacMan
 from src.ghost import Ghost
 from src.direction import Direction
 from src.ghost import GhostState, GhostHouseState
-
+# pylint: disable=protected-access
 
 
 def reset_positions(pacman, ghosts):

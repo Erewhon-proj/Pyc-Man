@@ -58,7 +58,7 @@ class TestMain:
 
         # Execute main
         with pytest.raises(KeyboardInterrupt):
-         main()
+            main()
 
         # Assertions to ensure expected functions were called
         assert mock_menu.show_start_screen.call_count == 2
