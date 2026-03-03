@@ -15,14 +15,14 @@ def mock_game_map(mocker: MockerFixture):
     """Creates a mock game map for testing using pytest-mock."""
     m = mocker.Mock(spec=GameMap)
 
-    # Configura attributi base
+    # Configure base attributes
     m.width = 20
     m.height = 20
 
-    # Default: tutto è camminabile
+    # Default: everything is walkable
     m.is_walkable.return_value = True
 
-    # Mock grid_to_pixel per restituire il centro esatto della tile
+    # Mock grid_to_pixel to return tile center
     m.grid_to_pixel.side_effect = lambda gx, gy: (
         gx * TILE_SIZE + TILE_SIZE / 2,
         gy * TILE_SIZE + TILE_SIZE / 2,
@@ -34,7 +34,7 @@ def mock_game_map(mocker: MockerFixture):
         int(py // TILE_SIZE),
     )
 
-    # Default: cella vuota
+    # Default: empy cell
     m.get_cell.return_value = 0
 
     return m

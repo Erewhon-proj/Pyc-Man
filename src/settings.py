@@ -82,6 +82,9 @@ LIVES_DISPLAY_Y = SCREEN_HEIGHT - 15  # Y position for lives display (bottom)
 LIVES_ICON_SIZE = 15  # Size of life icons
 LIVES_SPACING = 20  # Space between life icons
 
+# Pellet management
+NUM_PELLETS = 158
+
 # Score display
 SCORE_DISPLAY_X = 20  # X position for score display
 SCORE_DISPLAY_Y = 10  # Y position for score display (top)

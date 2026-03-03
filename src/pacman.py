@@ -86,7 +86,7 @@ class PacMan:
 
         self._try_change_direction()
         self._move()
-        self._animate()
+        self.animate()
         self._check_pellet_collision(ghosts)
         self._update_power_up()
         self._update_eating_timer()
@@ -306,7 +306,7 @@ class PacMan:
                 self.extra_lives_earned += new_lives
                 print(f"Extra life earned! Lives: {self.lives}")
 
-    def _animate(self) -> None:
+    def animate(self) -> None:
         """Handles mouth animation."""
         if self.direction == Direction.NONE:
             return

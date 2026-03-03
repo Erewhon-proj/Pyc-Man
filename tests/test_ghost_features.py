@@ -11,13 +11,14 @@ import pytest
 from pytest_mock import MockerFixture
 
 from src.direction import Direction
+from src.game_map import GameMap
 from src.ghost import Ghost, GhostConfig, GhostHouseState, GhostState
 from src.position import Position
 from src.settings import GHOST_SPEED, TILE_SIZE
 
 
 @pytest.fixture
-def ghost_config():
+def ghost_config() -> GhostConfig:
     """Basic ghost configuration."""
     return GhostConfig(
         start_position=Position(100, 100),
@@ -28,7 +29,7 @@ def ghost_config():
 
 
 @pytest.fixture
-def concrete_ghost(mock_game_map, ghost_config):
+def concrete_ghost(mock_game_map: GameMap, ghost_config: GhostConfig) -> Ghost:
     """Concrete Ghost instance (since Ghost is abstract)."""
 
     class TestGhost(Ghost):
@@ -48,7 +49,7 @@ def concrete_ghost(mock_game_map, ghost_config):
     return TestGhost(mock_game_map, ghost_config)
 
 
-def test_start_frightened(concrete_ghost):
+def test_start_frightened(concrete_ghost: Ghost) -> None:
     """Tests transition to FRIGHTENED state."""
     # Ensure ghost is in a state that allows becoming frightened
     concrete_ghost._state = GhostState.SCATTER
@@ -63,7 +64,7 @@ def test_start_frightened(concrete_ghost):
     assert concrete_ghost._direction == Direction.RIGHT
 
 
-def test_frightened_timer_update(concrete_ghost):
+def test_frightened_timer_update(concrete_ghost: Ghost) -> None:
     """Tests that frightened timer decrements and resets state."""
     concrete_ghost.start_frightened()
     concrete_ghost._frightened_timer = 1
@@ -75,7 +76,7 @@ def test_frightened_timer_update(concrete_ghost):
     assert concrete_ghost._speed == GHOST_SPEED
 
 
-def test_get_eaten(concrete_ghost):
+def test_get_eaten(concrete_ghost: Ghost) -> None:
     """Tests transition to EATEN state."""
     concrete_ghost.get_eaten()
 
@@ -83,7 +84,7 @@ def test_get_eaten(concrete_ghost):
     assert concrete_ghost._speed == 4
 
 
-def test_eaten_return_to_house(concrete_ghost):
+def test_eaten_return_to_house(concrete_ghost: Ghost) -> None:
     """Tests respawning when EATEN ghost reaches house."""
     concrete_ghost.get_eaten()
 
@@ -100,14 +101,14 @@ def test_eaten_return_to_house(concrete_ghost):
     assert concrete_ghost._speed == GHOST_SPEED
 
 
-def test_animation_update(concrete_ghost):
+def test_animation_update(concrete_ghost: Ghost) -> None:
     """Tests that animation frame advances."""
     initial_frame = concrete_ghost._animation_frame
     concrete_ghost.update(0, 0, (0, 0))
     assert concrete_ghost._animation_frame != initial_frame
 
 
-def test_draw_normal(concrete_ghost, mocker: MockerFixture):
+def test_draw_normal(concrete_ghost: Ghost, mocker: MockerFixture) -> None:
     """Tests drawing calls in normal state."""
     screen_mock = mocker.Mock()
     mock_circle = mocker.patch("pygame.draw.circle")
@@ -124,7 +125,7 @@ def test_draw_normal(concrete_ghost, mocker: MockerFixture):
     assert args[1] == (255, 0, 0)
 
 
-def test_draw_frightened(concrete_ghost, mocker: MockerFixture):
+def test_draw_frightened(concrete_ghost: Ghost, mocker: MockerFixture) -> None:
     """Tests drawing calls in frightened state."""
     concrete_ghost.start_frightened()
     screen_mock = mocker.Mock()
@@ -138,7 +139,7 @@ def test_draw_frightened(concrete_ghost, mocker: MockerFixture):
     assert args[1] != (255, 0, 0)
 
 
-def test_draw_eaten(concrete_ghost, mocker: MockerFixture):
+def test_draw_eaten(concrete_ghost: Ghost, mocker: MockerFixture) -> None:
     """Tests drawing calls in eaten state (Only eyes)."""
     concrete_ghost.get_eaten()
     screen_mock = mocker.Mock()
@@ -154,8 +155,8 @@ def test_draw_eaten(concrete_ghost, mocker: MockerFixture):
 
 
 def test_random_direction_when_frightened(
-    concrete_ghost, mock_game_map, mocker: MockerFixture
-):
+    concrete_ghost: Ghost, mock_game_map, mocker: MockerFixture
+) -> None:
     """Tests that ghost picks random direction when frightened."""
     concrete_ghost.start_frightened()
 
@@ -174,3 +175,46 @@ def test_random_direction_when_frightened(
 
     assert concrete_ghost._direction == Direction.UP
     mock_choice.assert_called()
+
+
+def test_draw_on_menu(concrete_ghost, mocker: MockerFixture):
+    """Tests that draw_on_menu correctly updates state and calls draw."""
+    # ---Setup mock screen and parameters---
+    screen_mock = mocker.Mock()
+    pacman_y = 300.0
+    index = 2
+    mock_screen_width = 800
+
+    # Patch the SCREEN_WIDTH constant in the module where it is used (src.ghost)
+    mocker.patch("src.ghost.settings.SCREEN_WIDTH", mock_screen_width)
+
+    # Mock the draw method on the instance itself (to verify it's called without rendering)
+    mock_draw = mocker.patch.object(concrete_ghost, "draw")
+
+    # Capture the initial state to verify the update
+    initial_animation_frame = concrete_ghost._animation_frame
+    expected_animation_frame = (
+        initial_animation_frame + concrete_ghost._animation_speed
+    ) % 2
+
+    # Calculate the expected result for the X coordinate
+    expected_x = (mock_screen_width // 2) - 20 + (index * 40)
+
+    # ---Execute the method under test---
+    concrete_ghost.draw_on_menu(screen_mock, pacman_y, index)
+
+    # ---Assertions---
+    # Verify the X position
+    assert concrete_ghost._position.x == expected_x
+
+    # Verify the Y position
+    assert concrete_ghost._position.y == pacman_y
+
+    # Verify the direction is forced to the left
+    assert concrete_ghost._direction == Direction.LEFT
+
+    # Verify the animation frame update
+    assert concrete_ghost._animation_frame == expected_animation_frame
+
+    # Verify that the draw method was called exactly once with the mocked screen
+    mock_draw.assert_called_once_with(screen_mock)

@@ -535,6 +535,14 @@ class Ghost(ABC):
         pygame.draw.circle(screen, settings.WHITE, (eye_x, eye_y), 4)
         pygame.draw.circle(screen, settings.BLUE, (eye_x + lx, eye_y + ly), 2)
 
+    def draw_on_menu(self, screen: pygame.Surface, pacman_y: float, i: int) -> None:
+        """Function to call only the necessary protected methods to draw ghosts on main menu"""
+        self._position.x = settings.SCREEN_WIDTH // 2 - 20 + (i * 40)
+        self._position.y = pacman_y
+        self._direction = Direction.LEFT
+        self._animation_frame = (self._animation_frame + self._animation_speed) % 2
+        self.draw(screen)
+
 
 class Blinky(Ghost):
     """Blinky (Red Ghost) - The Chaser."""

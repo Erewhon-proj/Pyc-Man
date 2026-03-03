@@ -8,6 +8,7 @@ from typing import List
 
 import pygame
 
+from src import highscore, menu
 from src.game_map import GameMap
 from src.ghost import Ghost
 from src.ghost_init import (
@@ -32,6 +33,14 @@ def main() -> None:  # pylint: disable=too-many-locals
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Pyc-Man")
     clock = pygame.time.Clock()
+
+    while True:
+        action = menu.show_start_screen(screen, clock)
+
+        if action == "PLAY":
+            break  # Start game
+        if action == "HIGH_SCORE":
+            highscore.show_high_scores_screen(screen, clock)  # show top 10 screen
 
     game_map = GameMap()
 
