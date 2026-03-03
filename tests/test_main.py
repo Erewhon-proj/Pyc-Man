@@ -61,14 +61,13 @@ class TestMain:
          main()
 
         # Assertions to ensure expected functions were called
-        mock_menu.show_start_screen.call_count == 2
+        assert mock_menu.show_start_screen.call_count == 2
         mock_pacman.handle_input.assert_called_once()
         mock_pacman.update.assert_called_once()
         mock_set_ghost_modes.assert_called_once()
 
     def test_main_high_score_then_play(self, mocker):
         """Test clicking HIGH_SCORE, then PLAY."""
-        mock_sys_exit = mocker.patch("src.main.sys.exit")
         mock_pygame = mocker.patch("src.main.pygame")
         mock_menu = mocker.patch("src.main.menu")
         mock_highscore = mocker.patch("src.main.highscore")

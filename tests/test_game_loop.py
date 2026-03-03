@@ -1,3 +1,6 @@
+"""Unit tests to test game_loop module"""
+# pylint: disable=redefined-outer-name
+
 import pytest
 
 from src.game_loop import reset_positions, level_finished, pacman_eaten

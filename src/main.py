@@ -3,7 +3,6 @@
 This module initializes Pygame, the game map, entities, and runs the main game loop.
 """
 
-import sys
 from typing import List
 
 import pygame
