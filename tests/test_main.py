@@ -61,7 +61,7 @@ class TestMain:
          main()
 
         # Assertions to ensure expected functions were called
-        mock_menu.show_start_screen.assert_call_count == 2
+        mock_menu.show_start_screen.call_count == 2
         mock_pacman.handle_input.assert_called_once()
         mock_pacman.update.assert_called_once()
         mock_set_ghost_modes.assert_called_once()
