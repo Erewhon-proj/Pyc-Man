@@ -82,7 +82,11 @@ class TestMain:
         mock_pacman_class.return_value = mock_pacman
 
         # Return "HIGH_SCORE" on the first loop iteration, then "PLAY" to break the menu loop
-        mock_menu.show_start_screen.side_effect = ["HIGH_SCORE", "PLAY", KeyboardInterrupt]
+        mock_menu.show_start_screen.side_effect = [
+            "HIGH_SCORE",
+            "PLAY",
+            KeyboardInterrupt,
+        ]
 
         # Immediately quit the main game loop
         quit_event = mocker.MagicMock()

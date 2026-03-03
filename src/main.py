@@ -7,8 +7,8 @@ from typing import List
 
 import pygame
 
-from src.highscore import save_high_score
 from src import highscore, menu
+from src.game_loop import level_finished, pacman_eaten
 from src.game_map import GameMap
 from src.ghost import Ghost
 from src.ghost_init import (
@@ -17,6 +17,7 @@ from src.ghost_init import (
     handle_ghost_release,
     set_ghost_modes,
 )
+from src.highscore import save_high_score
 from src.pacman import PacMan
 from src.settings import (
     BLACK,
@@ -25,7 +26,7 @@ from src.settings import (
     SCREEN_WIDTH,
     TILE_SIZE,
 )
-from src.game_loop import level_finished, pacman_eaten
+
 
 def main() -> None:  # pylint: disable=too-many-locals
     """main game loop setup"""
@@ -59,7 +60,9 @@ def main() -> None:  # pylint: disable=too-many-locals
                     if event.type == pygame.QUIT:
                         running = False
 
-                ghost_release_timer = level_finished(pacman, ghosts, game_map, ghost_release_timer)
+                ghost_release_timer = level_finished(
+                    pacman, ghosts, game_map, ghost_release_timer
+                )
                 pacman_eaten(pacman, ghosts)
 
                 # Ghost exit timers
@@ -67,7 +70,11 @@ def main() -> None:  # pylint: disable=too-many-locals
 
                 # Release ghosts from house based on pellets eaten and timer
                 handle_ghost_release(
-                    pacman.pellets_eaten, ghost_release_timer, ghosts[1], ghosts[2], ghosts[3]
+                    pacman.pellets_eaten,
+                    ghost_release_timer,
+                    ghosts[1],
+                    ghosts[2],
+                    ghosts[3],
                 )
 
                 # Update ghost modes based on timer (SCATTER/CHASE cycles)
@@ -91,7 +98,6 @@ def main() -> None:  # pylint: disable=too-many-locals
                     print("Game Over")
                     running = False
                     save_high_score(screen, clock, pacman.score)
-
 
                 # Draw
                 screen.fill(BLACK)

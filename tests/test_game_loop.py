@@ -1,12 +1,13 @@
 """Unit tests to test game_loop module"""
+
 # pylint: disable=redefined-outer-name
 # pylint: disable=protected-access
 
 import pytest
 
-from src.game_loop import reset_positions, level_finished, pacman_eaten
 from src.direction import Direction
-from src.ghost import GhostState, GhostHouseState
+from src.game_loop import level_finished, pacman_eaten, reset_positions
+from src.ghost import GhostHouseState, GhostState
 from src.settings import GHOST_SPEED, NUM_PELLETS
 
 
@@ -47,14 +48,16 @@ def mock_ghost_inky(mocker):
 @pytest.fixture
 def mock_game_map(mocker):
     """Provides a mocked GameMap instance."""
+
     class MockGameMap:
         """Mocked GameMap instance"""
+
         def __init__(self):
             pass
 
     game_map = MockGameMap()
     # Spy on the __init__ method to verify it gets called
-    mocker.spy(game_map, '__init__')
+    mocker.spy(game_map, "__init__")
     return game_map
 
 
@@ -84,7 +87,9 @@ def test_reset_positions(mock_pacman, mock_ghost_blinky, mock_ghost_inky):
     assert mock_ghost_inky._house_state == GhostHouseState.IN_HOUSE
 
 
-def test_level_finished_not_complete(mocker, mock_pacman, mock_ghost_blinky, mock_game_map):
+def test_level_finished_not_complete(
+    mocker, mock_pacman, mock_ghost_blinky, mock_game_map
+):
     """Test behavior when the level is not finished yet (pellets missing)."""
     # Setup: Pac-Man has eaten 1 pellet less than required
     mock_pacman.pellets_eaten = NUM_PELLETS - 1
@@ -92,7 +97,7 @@ def test_level_finished_not_complete(mocker, mock_pacman, mock_ghost_blinky, moc
     ghosts = [mock_ghost_blinky]
 
     # Patch reset_positions using pytest-mock
-    mock_reset_positions = mocker.patch('src.game_loop.reset_positions')
+    mock_reset_positions = mocker.patch("src.game_loop.reset_positions")
 
     # Execute
     result = level_finished(mock_pacman, ghosts, mock_game_map, timer)
@@ -112,7 +117,7 @@ def test_level_finished_complete(mocker, mock_pacman, mock_ghost_blinky, mock_ga
     ghosts = [mock_ghost_blinky]
 
     # Patch reset_positions using pytest-mock
-    mock_reset_positions = mocker.patch('src.game_loop.reset_positions')
+    mock_reset_positions = mocker.patch("src.game_loop.reset_positions")
 
     # Execute
     result = level_finished(mock_pacman, ghosts, mock_game_map, timer)

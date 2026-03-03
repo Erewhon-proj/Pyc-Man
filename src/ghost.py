@@ -54,9 +54,7 @@ class Ghost(ABC):
         """Initialize a ghost."""
         self._game_map: GameMap = game_map
         self._position = Position(config.start_position.x, config.start_position.y)
-        self.spawn_position = Position(
-            config.start_position.x, config.start_position.y
-        )
+        self.spawn_position = Position(config.start_position.x, config.start_position.y)
         self._original_color: Tuple[int, int, int] = config.color
         self._color: Tuple[int, int, int] = config.color
         self._name: str = config.name
