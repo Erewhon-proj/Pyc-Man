@@ -43,9 +43,13 @@ def mock_ghost_inky(mocker):
 @pytest.fixture
 def mock_game_map(mocker):
     """Provides a mocked GameMap instance."""
-    game_map = mocker.Mock()
-    # Explicitly mock __init__ to verify it gets called
-    game_map.__init__ = mocker.Mock(return_value=None)
+    class MockGameMap:
+        def __init__(self):
+            pass
+
+    game_map = MockGameMap()
+    # Spy on the __init__ method to verify it gets called
+    mocker.spy(game_map, '__init__')
     return game_map
 
 

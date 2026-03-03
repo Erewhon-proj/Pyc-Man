@@ -37,6 +37,8 @@ class TestMain:
         # Setup mock objects for the game loop
         mock_pacman = mocker.MagicMock()
         mock_pacman.lives = 3
+        mock_pacman.pellets_eaten = 0
+        mock_pacman.score = 0
         mock_pacman.direction.value = (1, 0)
         mock_pacman_class.return_value = mock_pacman
 
