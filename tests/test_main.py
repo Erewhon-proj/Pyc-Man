@@ -61,7 +61,7 @@ class TestMain:
          main()
 
         # Assertions to ensure expected functions were called
-        mock_menu.show_start_screen.assert_called_count == 2
+        mock_menu.show_start_screen.assert_call_count == 2
         mock_pacman.handle_input.assert_called_once()
         mock_pacman.update.assert_called_once()
         mock_set_ghost_modes.assert_called_once()
@@ -106,6 +106,7 @@ class TestMain:
         mocker.patch("src.main.GameMap")
         mock_pacman_class = mocker.patch("src.main.PacMan")
         mocker.patch("src.main.ghost_creation")
+        mocker.patch("src.main.save_high_score")
 
         mock_menu.show_start_screen.side_effect = ["PLAY", KeyboardInterrupt]
 
@@ -116,6 +117,7 @@ class TestMain:
         mock_pacman = mocker.MagicMock()
         mock_pacman.lives = 0
         mock_pacman.pellets_eaten = 0
+        mock_pacman.score = 0
         mock_pacman_class.return_value = mock_pacman
 
         with pytest.raises(KeyboardInterrupt):
