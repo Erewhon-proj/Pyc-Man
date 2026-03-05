@@ -9,8 +9,8 @@ from src.direction import Direction
 from src.game_loop import (
     level_finished,
     pacman_eaten,
-    reset_positions,
     reset_ghosts_position,
+    reset_positions,
 )
 from src.ghost import GhostHouseState, GhostState
 from src.settings import NUM_PELLETS
