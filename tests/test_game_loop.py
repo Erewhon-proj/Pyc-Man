@@ -6,7 +6,12 @@
 import pytest
 
 from src.direction import Direction
-from src.game_loop import level_finished, pacman_eaten, reset_positions, reset_ghosts_position
+from src.game_loop import (
+    level_finished,
+    pacman_eaten,
+    reset_positions,
+    reset_ghosts_position,
+)
 from src.ghost import GhostHouseState, GhostState
 from src.settings import NUM_PELLETS
 
@@ -76,12 +81,11 @@ def test_reset_positions(mock_pacman, mock_ghost_blinky, mock_ghost_inky):
     assert mock_pacman.next_direction == Direction.NONE
 
 
-
 def test_reset_ghosts_position(mock_ghost_blinky, mock_ghost_inky):
     """Test that resetting positions and states correctly updates all ghosts."""
     ghosts = [mock_ghost_blinky, mock_ghost_inky]
 
-    #Execute
+    # Execute
     reset_ghosts_position(ghosts)
 
     # Assert Blinky is reset and gets the ACTIVE house state

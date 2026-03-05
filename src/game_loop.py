@@ -6,6 +6,7 @@ from src.ghost import Ghost, GhostHouseState, GhostState
 from src.pacman import PacMan
 from src.settings import NUM_PELLETS
 
+
 def reset_positions(pacman: PacMan, ghosts: list[Ghost]) -> None:
     """Resets Pac-Man and the ghosts to their initial positions and states."""
 
