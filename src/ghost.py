@@ -54,9 +54,7 @@ class Ghost(ABC):
         """Initialize a ghost."""
         self._game_map: GameMap = game_map
         self._position = Position(config.start_position.x, config.start_position.y)
-        self._spawn_position = Position(
-            config.start_position.x, config.start_position.y
-        )
+        self.spawn_position = Position(config.start_position.x, config.start_position.y)
         self._original_color: Tuple[int, int, int] = config.color
         self._color: Tuple[int, int, int] = config.color
         self._name: str = config.name
@@ -166,6 +164,11 @@ class Ghost(ABC):
         elif self._direction == Direction.RIGHT:
             self._direction = Direction.LEFT
 
+    def set_position(self, new_x: float, new_y: float) -> None:
+        """Set method to force ghost position"""
+        self._position.x = new_x
+        self._position.y = new_y
+
     def update(
         self, pacman_x: float, pacman_y: float, pacman_direction: Tuple[int, int]
     ) -> None:
@@ -215,8 +218,8 @@ class Ghost(ABC):
         """Reset ghost after returning home as eyes."""
         self._state = GhostState.SCATTER
         self._speed = settings.GHOST_SPEED
-        self._position.x = self._spawn_position.x
-        self._position.y = self._spawn_position.y
+        self._position.x = self.spawn_position.x
+        self._position.y = self.spawn_position.y
         self._house_state = GhostHouseState.EXITING
         self._direction = Direction.UP
 
@@ -445,8 +448,8 @@ class Ghost(ABC):
 
     def return_to_house(self) -> None:
         """Return ghost to spawn position in ghost house (forced reset)."""
-        self._position.x = self._spawn_position.x
-        self._position.y = self._spawn_position.y
+        self._position.x = self.spawn_position.x
+        self._position.y = self.spawn_position.y
         self._house_state = GhostHouseState.IN_HOUSE
         self._direction = Direction.RIGHT
         self._state = GhostState.SCATTER

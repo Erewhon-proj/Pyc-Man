@@ -3,6 +3,7 @@ Basic tests for main module
 """
 
 import pygame
+import pytest
 
 from src.main import main
 
@@ -21,7 +22,6 @@ class TestMain:
     def test_main_play_and_quit(self, mocker):
         """Test starting the game and immediately quitting via pygame event."""
         # Patch external dependencies using the pytest-mock 'mocker' fixture
-        mock_sys_exit = mocker.patch("src.main.sys.exit")
         mock_pygame = mocker.patch("src.main.pygame")
         mock_menu = mocker.patch("src.main.menu")
         mocker.patch("src.main.GameMap")
@@ -32,11 +32,13 @@ class TestMain:
         mock_set_ghost_modes = mocker.patch("src.main.set_ghost_modes")
 
         # Break the menu loop by returning "PLAY"
-        mock_menu.show_start_screen.return_value = "PLAY"
+        mock_menu.show_start_screen.side_effect = ["PLAY", KeyboardInterrupt]
 
         # Setup mock objects for the game loop
         mock_pacman = mocker.MagicMock()
         mock_pacman.lives = 3
+        mock_pacman.pellets_eaten = 0
+        mock_pacman.score = 0
         mock_pacman.direction.value = (1, 0)
         mock_pacman_class.return_value = mock_pacman
 
@@ -55,19 +57,17 @@ class TestMain:
         mock_get_ghost_mode.return_value = "CHASE"
 
         # Execute main
-        main()
+        with pytest.raises(KeyboardInterrupt):
+            main()
 
         # Assertions to ensure expected functions were called
-        mock_menu.show_start_screen.assert_called_once()
+        assert mock_menu.show_start_screen.call_count == 2
         mock_pacman.handle_input.assert_called_once()
         mock_pacman.update.assert_called_once()
         mock_set_ghost_modes.assert_called_once()
-        mock_pygame.quit.assert_called_once()
-        mock_sys_exit.assert_called_once()
 
     def test_main_high_score_then_play(self, mocker):
         """Test clicking HIGH_SCORE, then PLAY."""
-        mock_sys_exit = mocker.patch("src.main.sys.exit")
         mock_pygame = mocker.patch("src.main.pygame")
         mock_menu = mocker.patch("src.main.menu")
         mock_highscore = mocker.patch("src.main.highscore")
@@ -82,7 +82,11 @@ class TestMain:
         mock_pacman_class.return_value = mock_pacman
 
         # Return "HIGH_SCORE" on the first loop iteration, then "PLAY" to break the menu loop
-        mock_menu.show_start_screen.side_effect = ["HIGH_SCORE", "PLAY"]
+        mock_menu.show_start_screen.side_effect = [
+            "HIGH_SCORE",
+            "PLAY",
+            KeyboardInterrupt,
+        ]
 
         # Immediately quit the main game loop
         quit_event = mocker.MagicMock()
@@ -90,24 +94,24 @@ class TestMain:
         mock_pygame.event.get.return_value = [quit_event]
         mock_pygame.QUIT = pygame.QUIT
 
-        main()
+        with pytest.raises(KeyboardInterrupt):
+            main()
 
         # Verify highscore screen was shown once, but the menu was queried twice
         mock_highscore.show_high_scores_screen.assert_called_once()
-        assert mock_menu.show_start_screen.call_count == 2
-        mock_sys_exit.assert_called_once()
+        assert mock_menu.show_start_screen.call_count == 3
 
     def test_main_game_over(self, mocker):
         """Test the game loop exiting when Pacman runs out of lives."""
         mock_print = mocker.patch("builtins.print")
-        mock_sys_exit = mocker.patch("src.main.sys.exit")
         mock_pygame = mocker.patch("src.main.pygame")
         mock_menu = mocker.patch("src.main.menu")
         mocker.patch("src.main.GameMap")
         mock_pacman_class = mocker.patch("src.main.PacMan")
         mocker.patch("src.main.ghost_creation")
+        mocker.patch("src.main.save_high_score")
 
-        mock_menu.show_start_screen.return_value = "PLAY"
+        mock_menu.show_start_screen.side_effect = ["PLAY", KeyboardInterrupt]
 
         # Mock empty events so it doesn't quit via pygame.QUIT (running goes to False via lives)
         mock_pygame.event.get.return_value = []
@@ -116,11 +120,11 @@ class TestMain:
         mock_pacman = mocker.MagicMock()
         mock_pacman.lives = 0
         mock_pacman.pellets_eaten = 0
+        mock_pacman.score = 0
         mock_pacman_class.return_value = mock_pacman
 
-        main()
+        with pytest.raises(KeyboardInterrupt):
+            main()
 
         # Verify game over was printed and loop ended normally
         mock_print.assert_called_with("Game Over")
-        mock_pygame.quit.assert_called_once()
-        mock_sys_exit.assert_called_once()

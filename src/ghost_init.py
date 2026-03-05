@@ -16,7 +16,7 @@ def handle_ghost_release(pellets_eaten: int, timer: int, pinky, inky, clyde) -> 
     - Inky: exits after 30 pellets eaten
     - Clyde: exits after 60 pellets eaten
     """
-    if timer == 60:
+    if timer >= 60:
         pinky.release_from_house()
     if pellets_eaten >= 30:
         inky.release_from_house()

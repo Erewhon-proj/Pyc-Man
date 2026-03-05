@@ -275,6 +275,7 @@ class PacMan:
         """Handles Pac-Man death and respawn."""
         print("Pac-Man Died!")
         self.lives -= 1
+        self.is_dead = True
 
         # Respawn at spawn position
         self._respawn()
