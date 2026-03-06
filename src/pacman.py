@@ -112,7 +112,9 @@ class PacMan:
 
             # Check if the target tile is free
             target_x, target_y = grid_x + dx, grid_y + dy
-            if self.game_map.is_walkable(target_x, target_y)and not (target_x == 9 and target_y == 9):
+            if self.game_map.is_walkable(target_x, target_y) and not (
+                target_x == 9 and target_y == 9
+            ):
                 # Center only the axis we're LEAVING (old direction)
                 pixel_x, pixel_y = self.game_map.grid_to_pixel(grid_x, grid_y)
 
@@ -172,9 +174,9 @@ class PacMan:
             next_grid_x = 0
 
         # Check if moving past center toward a wall
-        is_ghost_door = (next_grid_x == 9 and next_grid_y == 9)
-        if (not self.game_map.is_walkable(next_grid_x, next_grid_y)
-            or is_ghost_door
+        is_ghost_door = next_grid_x == 9 and next_grid_y == 9
+        if (
+            not self.game_map.is_walkable(next_grid_x, next_grid_y) or is_ghost_door
         ) and self._should_block_movement(new_x, new_y, center_x, center_y):
             self.position.x = center_x
             self.position.y = center_y

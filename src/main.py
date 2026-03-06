@@ -7,7 +7,6 @@ from typing import List
 
 import pygame
 
-from key_handler import wants_to_pause, wants_to_run
 from src import highscore, menu
 from src.difficulty import DifficultyManager
 from src.game_loop import level_finished, pacman_eaten
@@ -20,6 +19,7 @@ from src.ghost_init import (
     set_ghost_modes,
 )
 from src.highscore import save_high_score
+from src.key_handler import wants_to_pause, wants_to_run
 from src.pacman import PacMan
 from src.pause import pause
 from src.settings import (
@@ -122,7 +122,6 @@ def main() -> None:  # pylint: disable=too-many-locals
 
                     for ghost in ghosts:
                         ghost.draw(screen)  # Ghosts draw
-
 
                 pause(is_paused, screen)
 

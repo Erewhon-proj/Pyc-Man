@@ -134,6 +134,7 @@ def test_turn_blocked_by_ghost_door(pacman, mock_game_map):
     assert pacman.direction == Direction.RIGHT
     assert pacman.next_direction == Direction.DOWN
 
+
 def test_tunnel_wrapping(pacman):
     """Tests wrapping around the screen edges."""
     pacman.direction = Direction.LEFT
