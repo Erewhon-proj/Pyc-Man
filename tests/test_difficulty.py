@@ -62,7 +62,9 @@ class TestDifficultyManager:
         speed = difficulty_manager_level_3.get_ghost_speed()
         assert speed == MAX_GHOST_SPEED
 
-    def test_get_ghost_speed_level_5_remains_plateaued(self, difficulty_manager_level_5):
+    def test_get_ghost_speed_level_5_remains_plateaued(
+        self, difficulty_manager_level_5
+    ):
         """Test ghost speed remains at maximum beyond level 3."""
         speed = difficulty_manager_level_5.get_ghost_speed()
         assert speed == MAX_GHOST_SPEED
@@ -147,7 +149,9 @@ class TestDifficultyManager:
         duration_frames = manager.get_frightened_duration_frames()
         assert duration_frames == 210  # 3.5 seconds at 60 FPS (4s - 0.5s)
 
-    def test_get_frightened_duration_never_goes_below_minimum(self, difficulty_manager_level_5):
+    def test_get_frightened_duration_never_goes_below_minimum(
+        self, difficulty_manager_level_5
+    ):
         """Test frightened duration respects minimum threshold."""
         duration_frames = difficulty_manager_level_5.get_frightened_duration_frames()
         expected_min_frames = int(MIN_FRIGHTENED_DURATION * 60)
@@ -264,7 +268,9 @@ class TestDifficultyManager:
             # Original CHASE durations should be preserved
             assert duration > 0 or duration == -1  # Positive or permanent
 
-    def test_get_ghost_mode_cycles_preserves_permanent_mode(self, difficulty_manager_level_5):
+    def test_get_ghost_mode_cycles_preserves_permanent_mode(
+        self, difficulty_manager_level_5
+    ):
         """Test permanent mode marker is preserved."""
         cycles = difficulty_manager_level_5.get_ghost_mode_cycles()
         # Last cycle should be permanent CHASE
@@ -280,15 +286,21 @@ class TestDifficultyManager:
 
         assert manager.get_ghost_speed() == MAX_GHOST_SPEED
         assert manager.get_chase_speed_multiplier() == MAX_CHASE_SPEED_MULTIPLIER
-        assert manager.get_frightened_duration_frames() >= int(MIN_FRIGHTENED_DURATION * 60)
+        assert manager.get_frightened_duration_frames() >= int(
+            MIN_FRIGHTENED_DURATION * 60
+        )
         assert manager.get_pinky_release_frames() >= 30
         assert manager.get_inky_release_pellets() >= 15
 
     def test_all_methods_return_valid_types(self, difficulty_manager_level_1):
         """Test all methods return expected types."""
         assert isinstance(difficulty_manager_level_1.get_ghost_speed(), float)
-        assert isinstance(difficulty_manager_level_1.get_chase_speed_multiplier(), float)
-        assert isinstance(difficulty_manager_level_1.get_frightened_duration_frames(), int)
+        assert isinstance(
+            difficulty_manager_level_1.get_chase_speed_multiplier(), float
+        )
+        assert isinstance(
+            difficulty_manager_level_1.get_frightened_duration_frames(), int
+        )
         assert isinstance(difficulty_manager_level_1.get_pinky_release_frames(), int)
         assert isinstance(difficulty_manager_level_1.get_inky_release_pellets(), int)
         assert isinstance(difficulty_manager_level_1.get_clyde_release_pellets(), int)

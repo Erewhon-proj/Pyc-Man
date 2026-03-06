@@ -38,7 +38,9 @@ class GhostReleaseTestCase:
         GhostReleaseTestCase(60, 100, True, True, True),  # Clyde exits
     ],
 )
-def test_ghost_release_logic(mocker: MockerFixture, test_case: GhostReleaseTestCase) -> None:
+def test_ghost_release_logic(
+    mocker: MockerFixture, test_case: GhostReleaseTestCase
+) -> None:
     """Tests that ghosts are released at the correct time."""
     # Create Mocks for ghosts
     blinky = mocker.Mock()

@@ -55,9 +55,9 @@ class DifficultyManager:
             Speed multiplier (1.0 = normal, up to 1.4 = 40% faster).
         """
         # Increase by 10% per level for first 4 levels
-        multiplier = 1.0 + min(
-            self.level - 1, 4
-        ) * settings.CHASE_SPEED_INCREMENT_PER_LEVEL
+        multiplier = (
+            1.0 + min(self.level - 1, 4) * settings.CHASE_SPEED_INCREMENT_PER_LEVEL
+        )
         return min(multiplier, settings.MAX_CHASE_SPEED_MULTIPLIER)
 
     def get_frightened_duration_frames(self) -> int:
@@ -72,7 +72,9 @@ class DifficultyManager:
         """
         if self.level <= 3:
             # First 3 levels: aggressive reduction
-            decrement = (self.level - 1) * settings.FRIGHTENED_DURATION_DECREMENT_PER_LEVEL
+            decrement = (
+                self.level - 1
+            ) * settings.FRIGHTENED_DURATION_DECREMENT_PER_LEVEL
             duration = 10.0 - decrement
         else:
             # Level 4+: gradual reduction
@@ -119,7 +121,9 @@ class DifficultyManager:
         """
         reduction = (self.level - 1) * settings.GHOST_RELEASE_PELLET_REDUCTION_PER_LEVEL
         pellets = settings.CLYDE_BASE_RELEASE_PELLETS - reduction
-        return max(pellets, settings.MIN_GHOST_RELEASE_PELLETS * 2)  # Clyde needs 2x minimum
+        return max(
+            pellets, settings.MIN_GHOST_RELEASE_PELLETS * 2
+        )  # Clyde needs 2x minimum
 
     def get_scatter_reduction(self) -> int:
         """Calculate SCATTER mode duration reduction in frames.
@@ -130,9 +134,10 @@ class DifficultyManager:
         Returns:
             Number of frames to subtract from SCATTER durations.
         """
-        reduction_seconds = min(
-            self.level - 1, settings.MAX_SCATTER_REDUCTION
-        ) * settings.SCATTER_REDUCTION_PER_LEVEL
+        reduction_seconds = (
+            min(self.level - 1, settings.MAX_SCATTER_REDUCTION)
+            * settings.SCATTER_REDUCTION_PER_LEVEL
+        )
         return int(reduction_seconds * 60)  # Convert to frames at 60 FPS
 
     def get_ghost_mode_cycles(self) -> list[tuple[str, int]]:
@@ -150,7 +155,9 @@ class DifficultyManager:
         for mode, duration in settings.GHOST_MODE_CYCLES:
             if mode == "SCATTER" and duration > 0:
                 # Reduce SCATTER duration but enforce minimum
-                new_duration = max(duration - scatter_reduction, settings.MIN_SCATTER_DURATION)
+                new_duration = max(
+                    duration - scatter_reduction, settings.MIN_SCATTER_DURATION
+                )
                 cycles.append((mode, new_duration))
             else:
                 # Keep CHASE and permanent modes unchanged

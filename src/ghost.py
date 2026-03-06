@@ -165,7 +165,9 @@ class Ghost(ABC):
             self._state = GhostState.FRIGHTENED
             # Use difficulty manager to calculate frightened duration
             if self._difficulty_manager:
-                self._frightened_timer = self._difficulty_manager.get_frightened_duration_frames()
+                self._frightened_timer = (
+                    self._difficulty_manager.get_frightened_duration_frames()
+                )
             else:
                 self._frightened_timer = 600  # Default 10 seconds at 60 FPS
             self._speed = settings.GHOST_FRIGHTENED_SPEED  # Slower speed

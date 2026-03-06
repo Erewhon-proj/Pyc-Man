@@ -130,7 +130,9 @@ def test_level_finished(
     mock_reset_positions = mocker.patch("src.game_loop.reset_positions")
 
     # Execute
-    result_timer, result_level = level_finished(mock_pacman, ghosts, mock_game_map, timer, level)
+    result_timer, result_level = level_finished(
+        mock_pacman, ghosts, mock_game_map, timer, level
+    )
 
     # Assert
     assert result_timer == expected_timer

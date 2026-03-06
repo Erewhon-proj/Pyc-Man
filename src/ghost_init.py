@@ -41,7 +41,9 @@ def handle_ghost_release(
         ghosts[3].release_from_house()
 
 
-def get_ghost_mode(timer: int, difficulty_manager: Optional[DifficultyManager] = None) -> str:
+def get_ghost_mode(
+    timer: int, difficulty_manager: Optional[DifficultyManager] = None
+) -> str:
     """Determines the current ghost mode (SCATTER or CHASE) based on the game timer."""
 
     # Get level-based mode cycles or use default

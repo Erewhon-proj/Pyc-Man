@@ -98,7 +98,9 @@ def test_frightened_timer_update(concrete_ghost: Ghost) -> None:
         FrightenedStateTestCase(
             GhostState.FRIGHTENED, GhostState.FRIGHTENED, 600
         ),  # Refresh timer
-        FrightenedStateTestCase(GhostState.EATEN, GhostState.EATEN, 0),  # EATEN not affected
+        FrightenedStateTestCase(
+            GhostState.EATEN, GhostState.EATEN, 0
+        ),  # EATEN not affected
     ],
 )
 def test_start_frightened_behavior(

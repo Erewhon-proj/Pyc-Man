@@ -31,7 +31,9 @@ class TestGhostInitDifficultyIntegration:
 
     # --- get_ghost_mode Tests with Difficulty ---
 
-    def test_get_ghost_mode_level_1_uses_default_cycles(self, difficulty_manager_level_1):
+    def test_get_ghost_mode_level_1_uses_default_cycles(
+        self, difficulty_manager_level_1
+    ):
         """Test that level 1 uses default ghost mode cycles."""
         mode = get_ghost_mode(0, difficulty_manager_level_1)
         assert mode == "SCATTER"
@@ -49,12 +51,16 @@ class TestGhostInitDifficultyIntegration:
         mode = get_ghost_mode(0)
         assert mode == "SCATTER"
 
-    def test_get_ghost_mode_high_level_reduces_scatter(self, difficulty_manager_level_5):
+    def test_get_ghost_mode_high_level_reduces_scatter(
+        self, difficulty_manager_level_5
+    ):
         """Test that high levels reduce SCATTER duration."""
         # At level 5, SCATTER should be reduced significantly
         mode_at_start = get_ghost_mode(0, difficulty_manager_level_5)
         assert mode_at_start == "SCATTER"
-        mode_after_short_time = get_ghost_mode(180, difficulty_manager_level_5)  # 3 seconds
+        mode_after_short_time = get_ghost_mode(
+            180, difficulty_manager_level_5
+        )  # 3 seconds
         # At level 5, SCATTER is reduced from 7s to 3s, so at 3s should already be in CHASE
         assert mode_after_short_time == "CHASE"
 
@@ -103,7 +109,9 @@ class TestGhostInitDifficultyIntegration:
 
     # --- Integration Tests for Difficulty System ---
 
-    def test_difficulty_manager_affects_ghost_release_timing(self, difficulty_manager_level_5):
+    def test_difficulty_manager_affects_ghost_release_timing(
+        self, difficulty_manager_level_5
+    ):
         """Test that difficulty manager affects ghost release thresholds."""
         pinky_frames = difficulty_manager_level_5.get_pinky_release_frames()
         inky_pellets = difficulty_manager_level_5.get_inky_release_pellets()
@@ -114,7 +122,9 @@ class TestGhostInitDifficultyIntegration:
         assert inky_pellets == 15  # Minimum
         assert clyde_pellets == 40  # 60 - (4 * 5) = 40, max(40, 30) = 40
 
-    def test_difficulty_manager_cycles_change_correctly(self, difficulty_manager_level_3):
+    def test_difficulty_manager_cycles_change_correctly(
+        self, difficulty_manager_level_3
+    ):
         """Test that difficulty manager correctly modifies mode cycles."""
         cycles = difficulty_manager_level_3.get_ghost_mode_cycles()
 
@@ -125,11 +135,15 @@ class TestGhostInitDifficultyIntegration:
         scatter_cycles = [c for c in cycles if c[0] == "SCATTER" and c[1] > 0]
         for _mode, duration in scatter_cycles:
             original_duration = next(
-                d for m, d in GHOST_MODE_CYCLES if m == "SCATTER" and d == duration + 120
+                d
+                for m, d in GHOST_MODE_CYCLES
+                if m == "SCATTER" and d == duration + 120
             )
             assert duration < original_duration
 
-    def test_difficulty_manager_respects_minimum_values(self, difficulty_manager_level_5):
+    def test_difficulty_manager_respects_minimum_values(
+        self, difficulty_manager_level_5
+    ):
         """Test that difficulty manager respects minimum thresholds."""
         cycles = difficulty_manager_level_5.get_ghost_mode_cycles()
         scatter_cycles = [c for c in cycles if c[0] == "SCATTER" and c[1] > 0]
@@ -149,7 +163,11 @@ class TestGhostInitDifficultyIntegration:
         ],
     )
     def test_ghost_release_progression_across_levels(
-        self, level, expected_pinky_frames, expected_inky_pellets, expected_clyde_pellets
+        self,
+        level,
+        expected_pinky_frames,
+        expected_inky_pellets,
+        expected_clyde_pellets,
     ):
         """Test ghost release timing progression across levels."""
         manager = DifficultyManager(level=level)

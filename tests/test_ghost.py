@@ -477,12 +477,16 @@ def test_start_frightened_with_difficulty_manager(
 
     if test_case.should_refresh:
         assert concrete_ghost_with_difficulty._state == GhostState.FRIGHTENED
-        assert concrete_ghost_with_difficulty._frightened_timer == test_case.expected_timer
+        assert (
+            concrete_ghost_with_difficulty._frightened_timer == test_case.expected_timer
+        )
         assert concrete_ghost_with_difficulty._speed == 1.0
     else:
         # EATEN state should not be affected
         assert concrete_ghost_with_difficulty._state == GhostState.EATEN
-        assert concrete_ghost_with_difficulty._frightened_timer == test_case.initial_timer
+        assert (
+            concrete_ghost_with_difficulty._frightened_timer == test_case.initial_timer
+        )
 
 
 def test_start_frightened_without_difficulty_manager(concrete_ghost: Ghost):
@@ -546,7 +550,9 @@ def test_frightened_timer_expires_uses_difficulty_manager_speed(
     assert concrete_ghost_with_difficulty._speed == GHOST_SPEED
 
 
-def test_return_to_house_uses_difficulty_manager_speed(concrete_ghost_with_difficulty: Ghost):
+def test_return_to_house_uses_difficulty_manager_speed(
+    concrete_ghost_with_difficulty: Ghost,
+):
     """Test that return_to_house uses difficulty manager for speed calculation."""
     concrete_ghost_with_difficulty.return_to_house()
 
@@ -556,7 +562,9 @@ def test_return_to_house_uses_difficulty_manager_speed(concrete_ghost_with_diffi
     assert concrete_ghost_with_difficulty._house_state == GhostHouseState.IN_HOUSE
 
 
-def test_high_level_ghost_has_correct_speed(mock_game_map: MagicMock, ghost_config: GhostConfig):
+def test_high_level_ghost_has_correct_speed(
+    mock_game_map: MagicMock, ghost_config: GhostConfig
+):
     """Test that high level ghost has correct speed calculation."""
     high_level_difficulty = DifficultyManager(level=5)
 
