@@ -5,11 +5,14 @@ Test suite for Ghost classes.
 # pylint: disable=redefined-outer-name
 # pylint: disable=protected-access
 
+from dataclasses import dataclass
 from typing import Tuple
+from unittest.mock import MagicMock
 
 import pytest
 from pytest_mock import MockerFixture
 
+from src.difficulty import DifficultyManager
 from src.direction import Direction
 from src.game_map import GameMap
 from src.ghost import Ghost, GhostConfig, GhostHouseState, GhostState
@@ -23,8 +26,18 @@ from src.settings import (
 )
 
 
+@dataclass
+class FrightenedTestCase:
+    """Test case configuration for frightened behavior tests."""
+
+    initial_state: GhostState
+    initial_timer: int
+    expected_timer: int
+    should_refresh: bool
+
+
 @pytest.fixture
-def mock_game_map(mocker: MockerFixture) -> GameMap:
+def mock_game_map(mocker: MockerFixture) -> MagicMock:
     """Create a mocked GameMap for testing."""
     mock_map = mocker.Mock(spec=GameMap)
     mock_map.pixel_to_grid.return_value = (5, 5)
@@ -47,7 +60,7 @@ def ghost_config() -> GhostConfig:
 
 
 @pytest.fixture
-def concrete_ghost(mock_game_map: GameMap, ghost_config: GhostConfig) -> Ghost:
+def concrete_ghost(mock_game_map: MagicMock, ghost_config: GhostConfig) -> Ghost:
     """Create a concrete Ghost implementation for testing"""
 
     class ConcreteGhost(Ghost):
@@ -57,7 +70,7 @@ def concrete_ghost(mock_game_map: GameMap, ghost_config: GhostConfig) -> Ghost:
             self,
             pacman_x: float,
             pacman_y: float,
-            pacman_direction: Tuple[int, int],
+            _pacman_direction: Tuple[int, int],
         ) -> Tuple[float, float]:
             """Simple target calculation for testing."""
             return pacman_x, pacman_y
@@ -119,10 +132,12 @@ def test_ghost_initializes_with_config(mock_game_map, ghost_config):
     class TestGhost(Ghost):
         """Minimal Ghost implementation for testing."""
 
-        def calculate_target(self, pacman_x, pacman_y, pacman_direction):
+        def calculate_target(self, _pacman_x, _pacman_y, _pacman_direction):
+            """Calculate target position for testing."""
             return 0, 0
 
         def get_scatter_target(self):
+            """Get scatter target for testing."""
             return 0.0, 0.0
 
     ghost = TestGhost(mock_game_map, ghost_config)
@@ -167,10 +182,12 @@ def test_ghost_house_state_initialization(
     class TestGhost(Ghost):
         """Minimal Ghost implementation for testing."""
 
-        def calculate_target(self, pacman_x, pacman_y, pacman_direction):
+        def calculate_target(self, _pacman_x, _pacman_y, _pacman_direction):
+            """Calculate target position for testing."""
             return 0, 0
 
         def get_scatter_target(self):
+            """Get scatter target for testing."""
             return 0.0, 0.0
 
     ghost = TestGhost(mock_game_map, config)
@@ -383,3 +400,221 @@ def test_exit_house_moves_horizontally_first(concrete_ghost):
     concrete_ghost._exit_house()
 
     assert concrete_ghost._position.x > (exit_x - 20.0)
+
+
+# --- Difficulty System Tests ---
+
+
+@pytest.fixture
+def difficulty_manager_level_1():
+    """Provide DifficultyManager for level 1."""
+    return DifficultyManager(level=1)
+
+
+@pytest.fixture
+def difficulty_manager_level_3():
+    """Provide DifficultyManager for level 3."""
+    return DifficultyManager(level=3)
+
+
+@pytest.fixture
+def concrete_ghost_with_difficulty(
+    mock_game_map: MagicMock,
+    ghost_config: GhostConfig,
+    difficulty_manager_level_1: DifficultyManager,
+) -> Ghost:
+    """Create a concrete Ghost implementation with difficulty manager for testing."""
+
+    class ConcreteGhost(Ghost):
+        """Concrete implementation of Ghost for testing."""
+
+        def calculate_target(
+            self,
+            pacman_x: float,
+            pacman_y: float,
+            _pacman_direction: Tuple[int, int],
+        ) -> Tuple[float, float]:
+            """Simple target calculation for testing."""
+            return pacman_x, pacman_y
+
+        def get_scatter_target(self) -> Tuple[float, float]:
+            """Simple scatter target for testing."""
+            return 0.0, 0.0
+
+    return ConcreteGhost(mock_game_map, ghost_config, difficulty_manager_level_1)
+
+
+def test_ghost_with_difficulty_manager_uses_level_based_speed(
+    concrete_ghost_with_difficulty: Ghost,
+):
+    """Test that ghost uses difficulty manager for base speed calculation."""
+    # At level 1, speed should be base speed
+    assert concrete_ghost_with_difficulty._speed == GHOST_SPEED
+
+
+def test_ghost_without_difficulty_manager_uses_default_speed(concrete_ghost: Ghost):
+    """Test that ghost without difficulty manager uses default speed."""
+    assert concrete_ghost._speed == GHOST_SPEED
+
+
+@pytest.mark.parametrize(
+    "test_case",
+    [
+        FrightenedTestCase(GhostState.SCATTER, 0, 600, True),  # First activation
+        FrightenedTestCase(GhostState.CHASE, 0, 600, True),  # From CHASE
+        FrightenedTestCase(GhostState.FRIGHTENED, 100, 600, True),  # Refresh existing
+        FrightenedTestCase(GhostState.EATEN, 0, 0, False),  # EATEN not affected
+    ],
+)
+def test_start_frightened_with_difficulty_manager(
+    concrete_ghost_with_difficulty: Ghost, test_case: FrightenedTestCase
+) -> None:
+    """Test start_frightened behavior with difficulty manager across different states."""
+    concrete_ghost_with_difficulty._state = test_case.initial_state
+    concrete_ghost_with_difficulty._frightened_timer = test_case.initial_timer
+
+    concrete_ghost_with_difficulty.start_frightened()
+
+    if test_case.should_refresh:
+        assert concrete_ghost_with_difficulty._state == GhostState.FRIGHTENED
+        assert (
+            concrete_ghost_with_difficulty._frightened_timer == test_case.expected_timer
+        )
+        assert concrete_ghost_with_difficulty._speed == 1.0
+    else:
+        # EATEN state should not be affected
+        assert concrete_ghost_with_difficulty._state == GhostState.EATEN
+        assert (
+            concrete_ghost_with_difficulty._frightened_timer == test_case.initial_timer
+        )
+
+
+def test_start_frightened_without_difficulty_manager(concrete_ghost: Ghost):
+    """Test that frightened without difficulty manager uses default duration."""
+    concrete_ghost._state = GhostState.SCATTER
+    concrete_ghost.start_frightened()
+
+    # Should use default 600 frames
+    assert concrete_ghost._frightened_timer == 600
+
+
+def test_chase_speed_multiplier_applied_in_move(
+    concrete_ghost_with_difficulty: Ghost, mock_game_map: MagicMock
+):
+    """Test that CHASE mode speed multiplier is applied during movement."""
+    concrete_ghost_with_difficulty._state = GhostState.CHASE
+    concrete_ghost_with_difficulty._position = Position(150.0, 150.0)
+    concrete_ghost_with_difficulty._direction = Direction.RIGHT
+    concrete_ghost_with_difficulty._speed = 2.0
+    mock_game_map.is_walkable.return_value = True
+    mock_game_map.pixel_to_grid.return_value = (5, 5)
+    mock_game_map.grid_to_pixel.return_value = (150.0, 150.0)
+
+    initial_x = concrete_ghost_with_difficulty._position.x
+    concrete_ghost_with_difficulty._move()
+
+    # With CHASE multiplier of 1.0 at level 1, should move at normal speed
+    # Speed: 2.0 * 1.0 (CHASE) * 1.0 (no tunnel) = 2.0
+    assert concrete_ghost_with_difficulty._position.x == initial_x + 2.0
+
+
+def test_respawn_in_house_uses_difficulty_manager_speed(
+    concrete_ghost_with_difficulty: Ghost,
+):
+    """Test that respawn uses difficulty manager for speed calculation."""
+    concrete_ghost_with_difficulty._state = GhostState.EATEN
+    concrete_ghost_with_difficulty._position = Position(
+        concrete_ghost_with_difficulty._house_exit.x,
+        concrete_ghost_with_difficulty._house_exit.y,
+    )
+
+    concrete_ghost_with_difficulty.update(0, 0, (0, 0))
+
+    # Should use difficulty manager's base speed after respawn
+    assert concrete_ghost_with_difficulty._speed == GHOST_SPEED
+    assert concrete_ghost_with_difficulty._state == GhostState.SCATTER
+
+
+def test_frightened_timer_expires_uses_difficulty_manager_speed(
+    concrete_ghost_with_difficulty: Ghost,
+):
+    """Test that speed resets to difficulty manager's speed when frightened expires."""
+    concrete_ghost_with_difficulty._state = GhostState.FRIGHTENED
+    concrete_ghost_with_difficulty._frightened_timer = 1
+    concrete_ghost_with_difficulty._speed = 1.0
+
+    concrete_ghost_with_difficulty.update(0, 0, (0, 0))
+
+    # Should revert to difficulty manager's base speed
+    assert concrete_ghost_with_difficulty._state == GhostState.SCATTER
+    assert concrete_ghost_with_difficulty._speed == GHOST_SPEED
+
+
+def test_return_to_house_uses_difficulty_manager_speed(
+    concrete_ghost_with_difficulty: Ghost,
+):
+    """Test that return_to_house uses difficulty manager for speed calculation."""
+    concrete_ghost_with_difficulty.return_to_house()
+
+    # Should use difficulty manager's base speed
+    assert concrete_ghost_with_difficulty._speed == GHOST_SPEED
+    assert concrete_ghost_with_difficulty._state == GhostState.SCATTER
+    assert concrete_ghost_with_difficulty._house_state == GhostHouseState.IN_HOUSE
+
+
+def test_high_level_ghost_has_correct_speed(
+    mock_game_map: MagicMock, ghost_config: GhostConfig
+):
+    """Test that high level ghost has correct speed calculation."""
+    high_level_difficulty = DifficultyManager(level=5)
+
+    class ConcreteGhost(Ghost):
+        """Concrete implementation of Ghost for testing."""
+
+        def calculate_target(
+            self,
+            _pacman_x: float,
+            _pacman_y: float,
+            _pacman_direction: Tuple[int, int],
+        ) -> Tuple[float, float]:
+            """Calculate target position for testing."""
+            return _pacman_x, _pacman_y
+
+        def get_scatter_target(self) -> Tuple[float, float]:
+            """Get scatter target for testing."""
+            return 0.0, 0.0
+
+    ghost = ConcreteGhost(mock_game_map, ghost_config, high_level_difficulty)
+
+    # At level 5, speed should be at maximum (plateau)
+    assert ghost._speed == 2.0
+
+
+def test_high_level_ghost_has_correct_frightened_duration(
+    mock_game_map: MagicMock, ghost_config: GhostConfig
+):
+    """Test that high level ghost has reduced frightened duration."""
+    high_level_difficulty = DifficultyManager(level=5)
+
+    class ConcreteGhost(Ghost):
+        """Concrete implementation of Ghost for testing."""
+
+        def calculate_target(
+            self,
+            _pacman_x: float,
+            _pacman_y: float,
+            _pacman_direction: Tuple[int, int],
+        ) -> Tuple[float, float]:
+            """Calculate target position for testing."""
+            return _pacman_x, _pacman_y
+
+        def get_scatter_target(self) -> Tuple[float, float]:
+            """Get scatter target for testing."""
+            return 0.0, 0.0
+
+    ghost = ConcreteGhost(mock_game_map, ghost_config, high_level_difficulty)
+    ghost._state = GhostState.SCATTER
+    ghost.start_frightened()
+
+    # At level 5, frightened duration should be 3 seconds (180 frames)
+    assert ghost._frightened_timer == 180

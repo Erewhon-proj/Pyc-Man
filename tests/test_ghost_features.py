@@ -7,6 +7,8 @@ Uses pytest-mock for patching.
 # pylint: disable=protected-access
 # pylint: disable=too-many-statements
 
+from dataclasses import dataclass
+
 import pytest
 from pytest_mock import MockerFixture
 
@@ -15,6 +17,15 @@ from src.game_map import GameMap
 from src.ghost import Ghost, GhostConfig, GhostHouseState, GhostState
 from src.position import Position
 from src.settings import GHOST_SPEED, TILE_SIZE
+
+
+@dataclass
+class FrightenedStateTestCase:
+    """Test case for frightened state transitions."""
+
+    initial_state: GhostState
+    expected_state: GhostState
+    expected_timer: int
 
 
 @pytest.fixture
@@ -39,11 +50,13 @@ def concrete_ghost(mock_game_map: GameMap, ghost_config: GhostConfig) -> Ghost:
             self,
             pacman_x: float,
             pacman_y: float,
-            pacman_direction: tuple[int, int],
+            _pacman_direction: tuple[int, int],
         ) -> tuple[float, float]:
+            """Calculate target position for testing."""
             return pacman_x, pacman_y
 
         def get_scatter_target(self) -> tuple[float, float]:
+            """Get scatter target for testing."""
             return 0.0, 0.0
 
     return TestGhost(mock_game_map, ghost_config)
@@ -51,7 +64,6 @@ def concrete_ghost(mock_game_map: GameMap, ghost_config: GhostConfig) -> Ghost:
 
 def test_start_frightened(concrete_ghost: Ghost) -> None:
     """Tests transition to FRIGHTENED state."""
-    # Ensure ghost is in a state that allows becoming frightened
     concrete_ghost._state = GhostState.SCATTER
     concrete_ghost._direction = Direction.LEFT
 
@@ -60,7 +72,6 @@ def test_start_frightened(concrete_ghost: Ghost) -> None:
     assert concrete_ghost._state == GhostState.FRIGHTENED
     assert concrete_ghost._frightened_timer == 600
     assert concrete_ghost._speed == 1
-    # Verify direction reversal
     assert concrete_ghost._direction == Direction.RIGHT
 
 
@@ -69,11 +80,49 @@ def test_frightened_timer_update(concrete_ghost: Ghost) -> None:
     concrete_ghost.start_frightened()
     concrete_ghost._frightened_timer = 1
 
-    # Update call (pacman position irrelevant for this test)
     concrete_ghost.update(0, 0, (0, 0))
 
     assert concrete_ghost._state == GhostState.SCATTER
     assert concrete_ghost._speed == GHOST_SPEED
+
+
+@pytest.mark.parametrize(
+    "test_case",
+    [
+        FrightenedStateTestCase(
+            GhostState.SCATTER, GhostState.FRIGHTENED, 600
+        ),  # Normal activation
+        FrightenedStateTestCase(
+            GhostState.CHASE, GhostState.FRIGHTENED, 600
+        ),  # From CHASE mode
+        FrightenedStateTestCase(
+            GhostState.FRIGHTENED, GhostState.FRIGHTENED, 600
+        ),  # Refresh timer
+        FrightenedStateTestCase(
+            GhostState.EATEN, GhostState.EATEN, 0
+        ),  # EATEN not affected
+    ],
+)
+def test_start_frightened_behavior(
+    concrete_ghost: Ghost, test_case: FrightenedStateTestCase
+) -> None:
+    """Tests start_frightened behavior across different initial states."""
+    concrete_ghost._state = test_case.initial_state
+    if test_case.initial_state == GhostState.FRIGHTENED:
+        concrete_ghost._frightened_timer = 100  # Low timer to test refresh
+    elif test_case.initial_state == GhostState.EATEN:
+        concrete_ghost._speed = 4  # EATEN speed
+
+    concrete_ghost.start_frightened()
+
+    assert concrete_ghost._state == test_case.expected_state
+    if test_case.expected_state == GhostState.FRIGHTENED:
+        assert concrete_ghost._frightened_timer == test_case.expected_timer
+        assert concrete_ghost._speed == 1
+    else:
+        # EATEN state should not be affected
+        assert concrete_ghost._frightened_timer == 0
+        assert concrete_ghost._speed == 4
 
 
 def test_get_eaten(concrete_ghost: Ghost) -> None:

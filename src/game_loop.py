@@ -34,15 +34,16 @@ def reset_ghosts_position(ghosts: list[Ghost]) -> None:
 
 
 def level_finished(
-    pacman: PacMan, ghosts: list[Ghost], game_map: GameMap, timer: int
-) -> int:
-    """Function to reset level upon completion to continue playing"""
+    pacman: PacMan, ghosts: list[Ghost], game_map: GameMap, timer: int, level: int
+) -> tuple[int, int]:
+    """Function to reset level upon completion to continue playing."""
     if pacman.pellets_eaten >= NUM_PELLETS:
         reset_positions(pacman, ghosts)
         game_map.reset()
         pacman.pellets_eaten = 0
         timer = 0
-    return timer
+        level += 1  # Increment level counter
+    return timer, level
 
 
 def pacman_eaten(pacman: PacMan, ghosts: list[Ghost]) -> None:

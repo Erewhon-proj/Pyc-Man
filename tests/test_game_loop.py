@@ -101,46 +101,50 @@ def test_reset_ghosts_position(mock_ghost_blinky, mock_ghost_inky):
     mock_ghost_inky.reset_frightened_timer.assert_called_once()
 
 
-def test_level_finished_not_complete(
-    mocker, mock_pacman, mock_ghost_blinky, mock_game_map
+@pytest.mark.parametrize(
+    "pellets_eaten, expected_timer, expected_level, should_reset",
+    [
+        (NUM_PELLETS - 1, 50, 1, False),  # Level not complete
+        (NUM_PELLETS, 0, 2, True),  # Level complete
+    ],
+)
+# pylint: disable=too-many-positional-arguments
+def test_level_finished(
+    mocker,
+    mock_pacman,
+    mock_ghost_blinky,
+    mock_game_map,
+    pellets_eaten,
+    expected_timer,
+    expected_level,
+    should_reset,
 ):
-    """Test behavior when the level is not finished yet (pellets missing)."""
-    # Setup: Pac-Man has eaten 1 pellet less than required
-    mock_pacman.pellets_eaten = NUM_PELLETS - 1
+    """Test level_finished behavior based on pellets eaten."""
+    # Setup
+    mock_pacman.pellets_eaten = pellets_eaten
     timer = 50
+    level = 1
     ghosts = [mock_ghost_blinky]
 
     # Patch reset_positions using pytest-mock
     mock_reset_positions = mocker.patch("src.game_loop.reset_positions")
 
     # Execute
-    result = level_finished(mock_pacman, ghosts, mock_game_map, timer)
+    result_timer, result_level = level_finished(
+        mock_pacman, ghosts, mock_game_map, timer, level
+    )
 
-    # Assert nothing was reset and the timer remains unchanged
-    assert result == 50
-    assert mock_pacman.pellets_eaten == NUM_PELLETS - 1
-    mock_reset_positions.assert_not_called()
-    mock_game_map.reset.assert_not_called()
-
-
-def test_level_finished_complete(mocker, mock_pacman, mock_ghost_blinky, mock_game_map):
-    """Test behavior when the level is completed (all pellets eaten)."""
-    # Setup: Pac-Man has eaten all required pellets
-    mock_pacman.pellets_eaten = NUM_PELLETS
-    timer = 50
-    ghosts = [mock_ghost_blinky]
-
-    # Patch reset_positions using pytest-mock
-    mock_reset_positions = mocker.patch("src.game_loop.reset_positions")
-
-    # Execute
-    result = level_finished(mock_pacman, ghosts, mock_game_map, timer)
-
-    # Assert everything is reset
-    assert result == 0  # Timer is reset to 0
-    assert mock_pacman.pellets_eaten == 0  # Pellets are reset
-    mock_reset_positions.assert_called_once_with(mock_pacman, ghosts)
-    mock_game_map.reset.assert_called_once()
+    # Assert
+    assert result_timer == expected_timer
+    assert result_level == expected_level
+    if should_reset:
+        assert mock_pacman.pellets_eaten == 0
+        mock_reset_positions.assert_called_once_with(mock_pacman, ghosts)
+        mock_game_map.reset.assert_called_once()
+    else:
+        assert mock_pacman.pellets_eaten == pellets_eaten
+        mock_reset_positions.assert_not_called()
+        mock_game_map.reset.assert_not_called()
 
 
 def test_pacman_eaten_when_dead(mock_pacman, mock_ghost_blinky, mock_ghost_inky):

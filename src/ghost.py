@@ -12,6 +12,7 @@ from typing import Optional, Tuple
 import pygame
 
 from src import settings
+from src.difficulty import DifficultyManager
 from src.direction import Direction
 from src.game_map import GameMap
 from src.position import Position
@@ -50,7 +51,12 @@ class Ghost(ABC):
     # Game entities inherently need many attributes for state management
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, game_map: GameMap, config: GhostConfig) -> None:
+    def __init__(
+        self,
+        game_map: GameMap,
+        config: GhostConfig,
+        difficulty_manager: Optional[DifficultyManager] = None,
+    ) -> None:
         """Initialize a ghost."""
         self._game_map: GameMap = game_map
         self._position = Position(config.start_position.x, config.start_position.y)
@@ -59,8 +65,11 @@ class Ghost(ABC):
         self._color: Tuple[int, int, int] = config.color
         self._name: str = config.name
         self._direction: Direction = Direction.RIGHT
-        self._speed: float = settings.GHOST_SPEED
         self._target: Optional[Position] = None
+
+        # Difficulty manager for level-based parameters
+        self._difficulty_manager: Optional[DifficultyManager] = difficulty_manager
+        self._speed: float = self._get_base_speed()
 
         # States
         self._state: GhostState = GhostState.SCATTER
@@ -78,6 +87,12 @@ class Ghost(ABC):
         self._frightened_timer = 0
         self._animation_frame = 0.0
         self._animation_speed = 0.2
+
+    def _get_base_speed(self) -> float:
+        """Get base ghost speed based on difficulty level."""
+        if self._difficulty_manager:
+            return self._difficulty_manager.get_ghost_speed()
+        return settings.GHOST_SPEED
 
     @property
     def x(self) -> float:
@@ -146,9 +161,15 @@ class Ghost(ABC):
 
     def start_frightened(self) -> None:
         """Activate frightened state."""
-        if self._state not in [GhostState.EATEN, GhostState.FRIGHTENED]:
+        if self._state not in [GhostState.EATEN]:
             self._state = GhostState.FRIGHTENED
-            self._frightened_timer = 600  # Frames (e.g., 10 seconds at 60 FPS)
+            # Use difficulty manager to calculate frightened duration
+            if self._difficulty_manager:
+                self._frightened_timer = (
+                    self._difficulty_manager.get_frightened_duration_frames()
+                )
+            else:
+                self._frightened_timer = 600  # Default 10 seconds at 60 FPS
             self._speed = settings.GHOST_FRIGHTENED_SPEED  # Slower speed
             self._reverse_direction()
 
@@ -189,7 +210,7 @@ class Ghost(ABC):
             self._frightened_timer -= 1
             if self._frightened_timer <= 0:
                 self._state = GhostState.SCATTER
-                self._speed = settings.GHOST_SPEED
+                self._speed = self._get_base_speed()
 
         # 3. Handle Eaten State (Return to House)
         if self._state == GhostState.EATEN:
@@ -225,7 +246,7 @@ class Ghost(ABC):
     def _respawn_in_house(self) -> None:
         """Reset ghost after returning home as eyes."""
         self._state = GhostState.SCATTER
-        self._speed = settings.GHOST_SPEED
+        self._speed = self._get_base_speed()
         self._position.x = self.spawn_position.x
         self._position.y = self.spawn_position.y
         self._house_state = GhostHouseState.EXITING
@@ -388,14 +409,20 @@ class Ghost(ABC):
             return True
         return False
 
+    # pylint: disable=too-many-locals
     def _move(self) -> None:
         """Move the ghost in the current direction."""
         dx, dy = self._direction.value
+        # Calculate base speed with CHASE multiplier
+        base_speed = self._speed
+        if self._state == GhostState.CHASE and self._difficulty_manager:
+            chase_multiplier = self._difficulty_manager.get_chase_speed_multiplier()
+            base_speed *= chase_multiplier
         # Apply tunnel slowdown if in tunnel
         speed_multiplier = (
             settings.TUNNEL_SPEED_MULTIPLIER if self._is_in_tunnel() else 1.0
         )
-        effective_speed = self._speed * speed_multiplier
+        effective_speed = base_speed * speed_multiplier
         new_x: float = self._position.x + dx * effective_speed
         new_y: float = self._position.y + dy * effective_speed
 
@@ -461,7 +488,7 @@ class Ghost(ABC):
         self._house_state = GhostHouseState.IN_HOUSE
         self._direction = Direction.RIGHT
         self._state = GhostState.SCATTER
-        self._speed = settings.GHOST_SPEED
+        self._speed = self._get_base_speed()
 
     # --- RENDERING ---
 
@@ -558,7 +585,13 @@ class Ghost(ABC):
 class Blinky(Ghost):
     """Blinky (Red Ghost) - The Chaser."""
 
-    def __init__(self, game_map: GameMap, start_x: float, start_y: float) -> None:
+    def __init__(
+        self,
+        game_map: GameMap,
+        start_x: float,
+        start_y: float,
+        difficulty_manager: Optional[DifficultyManager] = None,
+    ) -> None:
         """Initialize Blinky."""
         config = GhostConfig(
             start_position=Position(start_x, start_y),
@@ -566,7 +599,7 @@ class Blinky(Ghost):
             name="Blinky",
             starts_in_house=False,
         )
-        super().__init__(game_map, config)
+        super().__init__(game_map, config, difficulty_manager)
         self._direction = Direction.LEFT
 
     def calculate_target(
@@ -589,7 +622,13 @@ class Blinky(Ghost):
 class Pinky(Ghost):
     """Pinky (Pink Ghost) - The Ambusher."""
 
-    def __init__(self, game_map: GameMap, start_x: float, start_y: float) -> None:
+    def __init__(
+        self,
+        game_map: GameMap,
+        start_x: float,
+        start_y: float,
+        difficulty_manager: Optional[DifficultyManager] = None,
+    ) -> None:
         """Initialize Pinky."""
         config = GhostConfig(
             start_position=Position(start_x, start_y),
@@ -597,7 +636,7 @@ class Pinky(Ghost):
             name="Pinky",
             starts_in_house=True,
         )
-        super().__init__(game_map, config)
+        super().__init__(game_map, config, difficulty_manager)
         self._tiles_ahead: int = settings.PINKY_TILES_AHEAD
 
     def calculate_target(
@@ -624,12 +663,14 @@ class Pinky(Ghost):
 class Inky(Ghost):
     """Inky (Cyan Ghost) - The Bashful One."""
 
+    # pylint: disable=too-many-positional-arguments
     def __init__(
         self,
         game_map: GameMap,
         start_x: float,
         start_y: float,
         blinky: Optional[Blinky] = None,
+        difficulty_manager: Optional[DifficultyManager] = None,
     ) -> None:
         """Initialize Inky."""
         config = GhostConfig(
@@ -638,7 +679,7 @@ class Inky(Ghost):
             name="Inky",
             starts_in_house=True,
         )
-        super().__init__(game_map, config)
+        super().__init__(game_map, config, difficulty_manager)
         self._blinky: Optional[Blinky] = blinky
         self._offset_tiles: int = settings.INKY_OFFSET_TILES
 
@@ -680,7 +721,13 @@ class Inky(Ghost):
 class Clyde(Ghost):
     """Clyde (Orange Ghost) - The Stupid One."""
 
-    def __init__(self, game_map: GameMap, start_x: float, start_y: float) -> None:
+    def __init__(
+        self,
+        game_map: GameMap,
+        start_x: float,
+        start_y: float,
+        difficulty_manager: Optional[DifficultyManager] = None,
+    ) -> None:
         """Initialize Clyde."""
         config = GhostConfig(
             start_position=Position(start_x, start_y),
@@ -688,7 +735,7 @@ class Clyde(Ghost):
             name="Clyde",
             starts_in_house=True,
         )
-        super().__init__(game_map, config)
+        super().__init__(game_map, config, difficulty_manager)
         self._scatter_distance: float = (
             settings.CLYDE_SCATTER_DISTANCE_TILES * settings.TILE_SIZE
         )

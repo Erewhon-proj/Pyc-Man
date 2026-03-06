@@ -8,6 +8,7 @@ from typing import List
 import pygame
 
 from src import highscore, menu
+from src.difficulty import DifficultyManager
 from src.game_loop import level_finished, pacman_eaten
 from src.game_map import GameMap
 from src.ghost import Ghost
@@ -41,13 +42,17 @@ def main() -> None:  # pylint: disable=too-many-locals
         if action == "PLAY":
             game_map = GameMap()
 
+            # Difficulty and level tracking
+            level = 1
+            difficulty_manager = DifficultyManager(level)
+
             # Pacman creation
             pacman = PacMan(
                 game_map, 9 * TILE_SIZE + TILE_SIZE / 2, 16 * TILE_SIZE + TILE_SIZE / 2
             )
 
-            # Ghost creation
-            ghosts: List[Ghost] = ghost_creation(game_map)
+            # Ghost creation with difficulty manager
+            ghosts: List[Ghost] = ghost_creation(game_map, difficulty_manager)
 
             ghost_release_timer = 0
             current_ghost_mode = "SCATTER"  # Initial mode
@@ -60,25 +65,27 @@ def main() -> None:  # pylint: disable=too-many-locals
                     if event.type == pygame.QUIT:
                         running = False
 
-                ghost_release_timer = level_finished(
-                    pacman, ghosts, game_map, ghost_release_timer
+                ghost_release_timer, level = level_finished(
+                    pacman, ghosts, game_map, ghost_release_timer, level
                 )
                 pacman_eaten(pacman, ghosts)
 
                 # Ghost exit timers
                 ghost_release_timer += 1
 
+                # Update difficulty manager when level changes
+                difficulty_manager = DifficultyManager(level)
+
                 # Release ghosts from house based on pellets eaten and timer
                 handle_ghost_release(
                     pacman.pellets_eaten,
                     ghost_release_timer,
-                    ghosts[1],
-                    ghosts[2],
-                    ghosts[3],
+                    ghosts,
+                    difficulty_manager,
                 )
 
                 # Update ghost modes based on timer (SCATTER/CHASE cycles)
-                new_ghost_mode = get_ghost_mode(ghost_release_timer)
+                new_ghost_mode = get_ghost_mode(ghost_release_timer, difficulty_manager)
                 if new_ghost_mode != current_ghost_mode:
                     set_ghost_modes(ghosts, new_ghost_mode, current_ghost_mode)
                     current_ghost_mode = new_ghost_mode

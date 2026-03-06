@@ -92,3 +92,29 @@ SCORE_FONT_SIZE = 20
 
 # Ghost scoring
 GHOST_BASE_SCORE = 200  # Base score for first frightened ghost
+
+# Difficulty progression per level
+MAX_GHOST_SPEED = 2.0  # Maximum base ghost speed (plateau)
+MAX_CHASE_SPEED_MULTIPLIER = 1.4  # Maximum CHASE mode speed multiplier (40%)
+MIN_FRIGHTENED_DURATION = 2.0  # Minimum frightened duration in seconds
+
+# Speed increments per level
+GHOST_SPEED_INCREMENT_PER_LEVEL = 0.05  # +5% per level (max 2 levels)
+CHASE_SPEED_INCREMENT_PER_LEVEL = 0.1  # +10% per level (max 4 levels)
+FRIGHTENED_DURATION_DECREMENT_PER_LEVEL = 2.0  # -2s per level (first 3 levels)
+FRIGHTENED_DURATION_DECREMENT_LATE = 0.5  # -0.5s per level (after level 3)
+
+# Ghost release timing
+PINKY_BASE_RELEASE_FRAMES = 60  # 1 second at 60 FPS
+INKY_BASE_RELEASE_PELLETS = 30
+CLYDE_BASE_RELEASE_PELLETS = 60
+
+GHOST_RELEASE_REDUCTION_PER_LEVEL = 10  # -10 frames per level (Pinky)
+GHOST_RELEASE_PELLET_REDUCTION_PER_LEVEL = 5  # -5 pellets per level (Inky/Clyde)
+MIN_PINKY_RELEASE_FRAMES = 30  # Minimum 0.5 seconds
+MIN_GHOST_RELEASE_PELLETS = 15  # Minimum pellets for ghost release
+
+# SCATTER mode timing
+SCATTER_REDUCTION_PER_LEVEL = 1.0  # -1 second per level
+MAX_SCATTER_REDUCTION = 4  # Maximum -4 seconds reduction
+MIN_SCATTER_DURATION = 60  # Minimum 1 second scatter duration
