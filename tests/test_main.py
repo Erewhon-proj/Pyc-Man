@@ -7,6 +7,8 @@ import pytest
 
 from src.main import main
 
+# pylint: disable=no-member
+
 
 class TestMain:
     """Tests for main functions"""
@@ -30,6 +32,10 @@ class TestMain:
         mocker.patch("src.main.handle_ghost_release")
         mock_get_ghost_mode = mocker.patch("src.main.get_ghost_mode")
         mock_set_ghost_modes = mocker.patch("src.main.set_ghost_modes")
+        mocker.patch("src.main.DifficultyManager")
+        mocker.patch("src.main.level_finished", return_value=(0, 1))
+        mocker.patch("src.main.pacman_eaten")
+        mocker.patch("src.main.pause")
 
         # Break the menu loop by returning "PLAY"
         mock_menu.show_start_screen.side_effect = ["PLAY", KeyboardInterrupt]
@@ -74,6 +80,13 @@ class TestMain:
         mocker.patch("src.main.GameMap")
         mock_pacman_class = mocker.patch("src.main.PacMan")
         mocker.patch("src.main.ghost_creation")
+        mocker.patch("src.main.DifficultyManager")
+        mocker.patch("src.main.level_finished", return_value=(0, 1))
+        mocker.patch("src.main.pacman_eaten")
+        mocker.patch("src.main.handle_ghost_release")
+        mocker.patch("src.main.get_ghost_mode", return_value="SCATTER")
+        mock_set_ghost_modes = mocker.patch("src.main.set_ghost_modes")
+        mocker.patch("src.main.pause")
 
         # Add integer value for pellets_eaten
         mock_pacman = mocker.MagicMock()
@@ -101,6 +114,9 @@ class TestMain:
         mock_highscore.show_high_scores_screen.assert_called_once()
         assert mock_menu.show_start_screen.call_count == 3
 
+        # Mode is mocked to match "SCATTER", ensure no mode swap occurred
+        mock_set_ghost_modes.assert_not_called()
+
     def test_main_game_over(self, mocker):
         """Test the game loop exiting when Pacman runs out of lives."""
         mock_print = mocker.patch("builtins.print")
@@ -110,6 +126,12 @@ class TestMain:
         mock_pacman_class = mocker.patch("src.main.PacMan")
         mocker.patch("src.main.ghost_creation")
         mocker.patch("src.main.save_high_score")
+        mocker.patch("src.main.DifficultyManager")
+        mocker.patch("src.main.level_finished", return_value=(0, 1))
+        mocker.patch("src.main.pacman_eaten")
+        mocker.patch("src.main.handle_ghost_release")
+        mocker.patch("src.main.get_ghost_mode", return_value="SCATTER")
+        mocker.patch("src.main.pause")
 
         mock_menu.show_start_screen.side_effect = ["PLAY", KeyboardInterrupt]
 
@@ -128,3 +150,26 @@ class TestMain:
 
         # Verify game over was printed and loop ended normally
         mock_print.assert_called_with("Game Over")
+
+    def test_main_paused_state(self, mocker):
+        """Test the main loop properly entering pause state."""
+        mock_pygame = mocker.patch("src.main.pygame")
+        mock_menu = mocker.patch("src.main.menu")
+        mocker.patch("src.main.GameMap")
+        mocker.patch("src.main.PacMan")
+        mocker.patch("src.main.ghost_creation")
+        mocker.patch("src.main.DifficultyManager")
+        mock_pause = mocker.patch("src.main.pause")
+
+        mock_menu.show_start_screen.side_effect = ["PLAY", KeyboardInterrupt]
+
+        # Force the loop to run once, then quit
+        mocker.patch("src.main.wants_to_run", return_value=False)
+        # Force the game into standard pause execution flow
+        mocker.patch("src.main.wants_to_pause", return_value=True)
+
+        with pytest.raises(KeyboardInterrupt):
+            main()
+
+        # Verify loop correctly called pause with evaluated True condition
+        mock_pause.assert_called_with(True, mock_pygame.display.set_mode.return_value)

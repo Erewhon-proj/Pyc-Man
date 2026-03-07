@@ -5,6 +5,7 @@ Uses pytest-mock for patching.
 
 # pylint: disable=redefined-outer-name
 # pylint: disable=protected-access
+# pylint: disable=no-member
 
 import pygame
 import pytest
@@ -93,6 +94,45 @@ def test_movement_wall_collision(pacman, mock_game_map):
 
     # Allow small float tolerance
     assert abs(pacman.x - center_current_tile_x) < 0.1
+
+
+def test_movement_ghost_door_collision(pacman, mock_game_map):
+    """Tests that Pac-Man cannot enter the ghost house (9, 9) even if walkable."""
+    pacman.direction = Direction.DOWN
+
+    # Position Pac-Man in the cell exactly above the door, at (9, 8)
+    pacman.position.x = 9 * settings.TILE_SIZE + settings.TILE_SIZE / 2
+    pacman.position.y = 8 * settings.TILE_SIZE + settings.TILE_SIZE / 2
+
+    # The map says (9, 9) is walkable (it's the ghost door)
+    mock_game_map.is_walkable.return_value = True
+
+    # Attempt to move downwards (towards 9, 9)
+    for _ in range(20):
+        pacman.update([])
+
+    # Pac-Man must have stopped at the center of cell (9, 8) without moving down
+    center_current_tile_y = 8 * settings.TILE_SIZE + settings.TILE_SIZE / 2
+    assert abs(pacman.y - center_current_tile_y) < 0.1
+
+
+def test_turn_blocked_by_ghost_door(pacman, mock_game_map):
+    """Tests that turning into the ghost house (9, 9) is blocked for Pac-Man."""
+    # Position Pac-Man at (9, 8) moving RIGHT
+    pacman.position.x = 9 * settings.TILE_SIZE + settings.TILE_SIZE / 2
+    pacman.position.y = 8 * settings.TILE_SIZE + settings.TILE_SIZE / 2
+
+    pacman.direction = Direction.RIGHT
+    pacman.next_direction = Direction.DOWN  # Attempt to turn down towards (9, 9)
+
+    # The map returns True for cell (9, 9)
+    mock_game_map.is_walkable.return_value = True
+
+    pacman._try_change_direction()
+
+    # The direction change must fail and Pac-Man should continue straight
+    assert pacman.direction == Direction.RIGHT
+    assert pacman.next_direction == Direction.DOWN
 
 
 def test_tunnel_wrapping(pacman):

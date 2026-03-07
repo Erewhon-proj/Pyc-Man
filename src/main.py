@@ -19,7 +19,9 @@ from src.ghost_init import (
     set_ghost_modes,
 )
 from src.highscore import save_high_score
+from src.key_handler import wants_to_pause, wants_to_run
 from src.pacman import PacMan
+from src.pause import pause
 from src.settings import (
     BLACK,
     FPS,
@@ -56,66 +58,72 @@ def main() -> None:  # pylint: disable=too-many-locals
 
             ghost_release_timer = 0
             current_ghost_mode = "SCATTER"  # Initial mode
+            is_paused = False
 
             # ----Main loop----------
             running = True
             while running:
                 # Events handler
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
+                events = pygame.event.get()
+                running = wants_to_run(events)
+                is_paused = wants_to_pause(events, is_paused)
+
+                if not is_paused:
+                    ghost_release_timer, level = level_finished(
+                        pacman, ghosts, game_map, ghost_release_timer, level
+                    )
+                    pacman_eaten(pacman, ghosts)
+
+                    # Ghost exit timers
+                    ghost_release_timer += 1
+
+                    # Update difficulty manager when level changes
+                    difficulty_manager = DifficultyManager(level)
+
+                    # Release ghosts from house based on pellets eaten and timer
+                    handle_ghost_release(
+                        pacman.pellets_eaten,
+                        ghost_release_timer,
+                        ghosts,
+                        difficulty_manager,
+                    )
+
+                    # Update ghost modes based on timer (SCATTER/CHASE cycles)
+                    new_ghost_mode = get_ghost_mode(
+                        ghost_release_timer, difficulty_manager
+                    )
+                    if new_ghost_mode != current_ghost_mode:
+                        set_ghost_modes(ghosts, new_ghost_mode, current_ghost_mode)
+                        current_ghost_mode = new_ghost_mode
+
+                    # Pacman logic update
+                    pacman.handle_input()
+                    pacman.update(ghosts)
+
+                    # Calculate pacman direction for ghosts
+                    current_dir = pacman.direction.value if pacman.direction else (0, 0)
+
+                    for ghost in ghosts:
+                        ghost.update(pacman.x, pacman.y, current_dir)
+
+                    # Game Over check
+                    if pacman.lives <= 0:
+                        print("Game Over")
                         running = False
+                        save_high_score(screen, clock, pacman.score)
 
-                ghost_release_timer, level = level_finished(
-                    pacman, ghosts, game_map, ghost_release_timer, level
-                )
-                pacman_eaten(pacman, ghosts)
+                    # Draw
+                    screen.fill(BLACK)
 
-                # Ghost exit timers
-                ghost_release_timer += 1
+                    game_map.draw(screen)  # map draw
+                    pacman.draw(screen)  # Pac-Man draw
+                    pacman.draw_score(screen)  # Draw score
+                    pacman.draw_lives(screen)  # Draw lives counter
 
-                # Update difficulty manager when level changes
-                difficulty_manager = DifficultyManager(level)
+                    for ghost in ghosts:
+                        ghost.draw(screen)  # Ghosts draw
 
-                # Release ghosts from house based on pellets eaten and timer
-                handle_ghost_release(
-                    pacman.pellets_eaten,
-                    ghost_release_timer,
-                    ghosts,
-                    difficulty_manager,
-                )
-
-                # Update ghost modes based on timer (SCATTER/CHASE cycles)
-                new_ghost_mode = get_ghost_mode(ghost_release_timer, difficulty_manager)
-                if new_ghost_mode != current_ghost_mode:
-                    set_ghost_modes(ghosts, new_ghost_mode, current_ghost_mode)
-                    current_ghost_mode = new_ghost_mode
-
-                # Pacman logic update
-                pacman.handle_input()
-                pacman.update(ghosts)
-
-                # Calculate pacman directiopn for ghosts
-                current_dir = pacman.direction.value if pacman.direction else (0, 0)
-
-                for ghost in ghosts:
-                    ghost.update(pacman.x, pacman.y, current_dir)
-
-                # Game Over check
-                if pacman.lives <= 0:
-                    print("Game Over")
-                    running = False
-                    save_high_score(screen, clock, pacman.score)
-
-                # Draw
-                screen.fill(BLACK)
-
-                game_map.draw(screen)  # map draw
-                pacman.draw(screen)  # Pac-Man draw
-                pacman.draw_score(screen)  # Draw score
-                pacman.draw_lives(screen)  # Draw lives counter
-
-                for ghost in ghosts:
-                    ghost.draw(screen)  # Ghosts draw
+                pause(is_paused, screen)
 
                 pygame.display.flip()
                 clock.tick(FPS)
