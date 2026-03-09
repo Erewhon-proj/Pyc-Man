@@ -52,6 +52,7 @@ def main() -> None:  # pylint: disable=too-many-locals
             pacman = PacMan(
                 game_map, 9 * TILE_SIZE + TILE_SIZE / 2, 16 * TILE_SIZE + TILE_SIZE / 2
             )
+            pacman.set_difficulty_manager(difficulty_manager)
 
             # Ghost creation with difficulty manager
             ghosts: List[Ghost] = ghost_creation(game_map, difficulty_manager)
@@ -74,11 +75,12 @@ def main() -> None:  # pylint: disable=too-many-locals
                     )
                     pacman_eaten(pacman, ghosts)
 
-                    # Ghost exit timers
-                    ghost_release_timer += 1
-
                     # Update difficulty manager when level changes
                     difficulty_manager = DifficultyManager(level)
+                    pacman.set_difficulty_manager(difficulty_manager)
+
+                    # Ghost exit timers
+                    ghost_release_timer += 1
 
                     # Release ghosts from house based on pellets eaten and timer
                     handle_ghost_release(

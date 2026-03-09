@@ -9,6 +9,7 @@ from src.settings import (
     GHOST_SPEED,
     MAX_CHASE_SPEED_MULTIPLIER,
     MAX_GHOST_SPEED,
+    MAX_SCORE_MULTIPLIER,
     MIN_FRIGHTENED_DURATION,
 )
 
@@ -306,3 +307,46 @@ class TestDifficultyManager:
         assert isinstance(difficulty_manager_level_1.get_clyde_release_pellets(), int)
         assert isinstance(difficulty_manager_level_1.get_scatter_reduction(), int)
         assert isinstance(difficulty_manager_level_1.get_ghost_mode_cycles(), list)
+        assert isinstance(difficulty_manager_level_1.get_score_multiplier(), float)
+
+    # --- Score Multiplier Tests ---
+
+    def test_get_score_multiplier_level_1(self, difficulty_manager_level_1):
+        """Test score multiplier is 1.0 at level 1."""
+        multiplier = difficulty_manager_level_1.get_score_multiplier()
+        assert multiplier == 1.0
+
+    def test_get_score_multiplier_increases_per_level(self):
+        """Test score multiplier increases by 10% per level."""
+        manager = DifficultyManager(level=3)
+        multiplier = manager.get_score_multiplier()
+        assert multiplier == 1.2
+
+    def test_get_score_multiplier_level_5(self):
+        """Test score multiplier at level 5."""
+        manager = DifficultyManager(level=5)
+        multiplier = manager.get_score_multiplier()
+        assert multiplier == 1.4
+
+    def test_get_score_multiplier_maxes_out(self):
+        """Test score multiplier reaches maximum at level 6."""
+        manager = DifficultyManager(level=6)
+        multiplier = manager.get_score_multiplier()
+        assert multiplier == MAX_SCORE_MULTIPLIER
+
+    @pytest.mark.parametrize(
+        "level, expected_multiplier",
+        [
+            (1, 1.0),  # Base
+            (2, 1.1),  # +10%
+            (3, 1.2),  # +20%
+            (4, 1.3),  # +30%
+            (5, 1.4),  # +40%
+            (6, 1.5),  # +50% (max)
+            (10, 1.5),  # Still max
+        ],
+    )
+    def test_get_score_multiplier_progression(self, level, expected_multiplier):
+        """Test score multiplier progression across all levels."""
+        manager = DifficultyManager(level=level)
+        assert manager.get_score_multiplier() == expected_multiplier

@@ -164,3 +164,11 @@ class DifficultyManager:
                 cycles.append((mode, duration))
 
         return cycles
+
+    def get_score_multiplier(self) -> float:
+        """Calculate score multiplier for current level.
+
+        Score multiplier (1.0 = base, up to 1.5 = 50% bonus).
+        """
+        multiplier = 1.0 + min(self.level - 1, 5) * settings.SCORE_MULTIPLIER_PER_LEVEL
+        return min(multiplier, settings.MAX_SCORE_MULTIPLIER)

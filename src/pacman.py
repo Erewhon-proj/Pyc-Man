@@ -4,7 +4,7 @@ This module defines the PacMan class, handling movement, input, and interaction.
 """
 
 import math
-from typing import List
+from typing import TYPE_CHECKING, List
 
 import pygame
 
@@ -13,6 +13,9 @@ from src.direction import Direction
 from src.game_map import GameMap
 from src.ghost import Ghost
 from src.position import Position
+
+if TYPE_CHECKING:
+    from src.difficulty import DifficultyManager
 
 
 class PacMan:
@@ -36,6 +39,7 @@ class PacMan:
         self.lives = settings.STARTING_LIVES
         self.extra_lives_earned = 0  # Track how many extra lives have been earned
         self.pellets_eaten = 0  # Counter for ghost release logic
+        self.difficulty_manager: "DifficultyManager | None" = None
 
         # Animation state
         self.mouth_open_angle = 0
@@ -64,6 +68,10 @@ class PacMan:
     def y(self) -> float:
         """Get Y position."""
         return self.position.y
+
+    def set_difficulty_manager(self, difficulty_manager: "DifficultyManager") -> None:
+        """Set the difficulty manager for score calculation."""
+        self.difficulty_manager = difficulty_manager
 
     def handle_input(self) -> None:
         """Handles keyboard input to set the next direction."""
@@ -189,12 +197,17 @@ class PacMan:
         grid_x, grid_y = self.position.to_grid()
         cell_value = self.game_map.get_cell(grid_x, grid_y)
 
+        # Get score multiplier from difficulty manager
+        score_multiplier = 1.0
+        if self.difficulty_manager:
+            score_multiplier = self.difficulty_manager.get_score_multiplier()
+
         # Check proximity to center
         pixel_x, pixel_y = self.game_map.grid_to_pixel(grid_x, grid_y)
         if abs(self.position.x - pixel_x) < 5 and abs(self.position.y - pixel_y) < 5:
             if cell_value == 2:  # Normal Pellet
                 self.game_map.set_cell(grid_x, grid_y, 0)
-                self.score += 10
+                self.score += int(10 * score_multiplier)
                 self.pellets_eaten += 1
                 self._check_extra_life()
                 # Trigger eating slowdown (71% of normal speed)
@@ -202,7 +215,7 @@ class PacMan:
                 self._update_speed()
             elif cell_value == 3:  # Power Pellet
                 self.game_map.set_cell(grid_x, grid_y, 0)
-                self.score += 50
+                self.score += int(50 * score_multiplier)
                 self.pellets_eaten += 1  # Increment pellet counter
                 self._check_extra_life()
                 self._activate_power_up()
@@ -257,6 +270,11 @@ class PacMan:
         if self.death_timer > 0:
             return
 
+        # Get score multiplier from difficulty manager
+        score_multiplier = 1.0
+        if self.difficulty_manager:
+            score_multiplier = self.difficulty_manager.get_score_multiplier()
+
         # Collision threshold: ~8 pixels (more precise than before)
         collision_threshold = (
             settings.TILE_SIZE * 0.27
@@ -267,8 +285,12 @@ class PacMan:
 
             if dist < collision_threshold:
                 if ghost.is_frightened:
-                    points = settings.GHOST_BASE_SCORE * self.ghost_multiplier
-                    self.score += points
+                    points = (
+                        settings.GHOST_BASE_SCORE
+                        * self.ghost_multiplier
+                        * score_multiplier
+                    )
+                    self.score += int(points)
                     self.ghost_multiplier *= 2  # Double multiplier for next ghost
                     self._check_extra_life()
                     ghost.get_eaten()
