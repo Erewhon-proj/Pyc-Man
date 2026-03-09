@@ -97,12 +97,14 @@ GHOST_BASE_SCORE = 200  # Base score for first frightened ghost
 MAX_GHOST_SPEED = 2.0  # Maximum base ghost speed (plateau)
 MAX_CHASE_SPEED_MULTIPLIER = 1.4  # Maximum CHASE mode speed multiplier (40%)
 MIN_FRIGHTENED_DURATION = 2.0  # Minimum frightened duration in seconds
+MAX_SCORE_MULTIPLIER = 1.5  # Maximum score multiplier (50% bonus)
 
 # Speed increments per level
 GHOST_SPEED_INCREMENT_PER_LEVEL = 0.05  # +5% per level (max 2 levels)
 CHASE_SPEED_INCREMENT_PER_LEVEL = 0.1  # +10% per level (max 4 levels)
 FRIGHTENED_DURATION_DECREMENT_PER_LEVEL = 2.0  # -2s per level (first 3 levels)
 FRIGHTENED_DURATION_DECREMENT_LATE = 0.5  # -0.5s per level (after level 3)
+SCORE_MULTIPLIER_PER_LEVEL = 0.1  # +10% score per level (max 5 levels)
 
 # Ghost release timing
 PINKY_BASE_RELEASE_FRAMES = 60  # 1 second at 60 FPS
