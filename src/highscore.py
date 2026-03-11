@@ -1,7 +1,5 @@
 """Module for handling high scores logic and screens."""
 
-# pylint: disable=duplicate-code
-
 import json
 import os
 import sys
@@ -10,6 +8,7 @@ from typing import Dict, List, Union
 import pygame
 
 from src.settings import BLACK, FPS, SCREEN_HEIGHT, SCREEN_WIDTH, WHITE, YELLOW
+from src.utils import handle_quit_event
 
 SCORE_FILE = "highscores.json"
 MAX_SCORES = 10
@@ -167,10 +166,9 @@ def show_high_scores_screen(screen: pygame.Surface, clock: pygame.time.Clock) ->
         back_rect = back_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 60))
 
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            if handle_quit_event(event):
+                break
+            if event.type == pygame.MOUSEBUTTONDOWN:
                 if back_rect.collidepoint(event.pos):
                     return  # goes back to menu
 

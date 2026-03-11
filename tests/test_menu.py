@@ -93,8 +93,8 @@ def test_show_start_screen_quit(mocker, mock_game_elements):
     mocker.patch("pygame.event.get", return_value=[event_quit])
 
     # Mock sys.exit to raise a SystemExit exception so it doesn't kill pytest
-    mock_sys_exit = mocker.patch("src.menu.sys.exit", side_effect=SystemExit)
-    mock_pygame_quit = mocker.patch("src.menu.pygame.quit")
+    mock_sys_exit = mocker.patch("src.utils.sys.exit", side_effect=SystemExit)
+    mock_pygame_quit = mocker.patch("src.utils.pygame.quit")
 
     # Assert that calling the menu function raises SystemExit
     with pytest.raises(SystemExit):

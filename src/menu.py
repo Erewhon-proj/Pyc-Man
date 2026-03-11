@@ -1,9 +1,5 @@
 """Main menu module"""
 
-# pylint: disable=duplicate-code
-
-import sys
-
 import pygame
 
 from src.direction import Direction
@@ -11,6 +7,7 @@ from src.game_map import GameMap
 from src.ghost_init import ghost_creation
 from src.pacman import PacMan
 from src.settings import BLACK, FPS, SCREEN_HEIGHT, SCREEN_WIDTH, WHITE, YELLOW
+from src.utils import handle_quit_event
 
 
 def show_start_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> str:
@@ -47,10 +44,9 @@ def show_start_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> str:
 
         # Event handling
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            if handle_quit_event(event):
+                break
+            if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = event.pos
                 if play_rect.collidepoint(mouse_pos):
                     return "PLAY"

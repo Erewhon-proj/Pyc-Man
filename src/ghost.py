@@ -51,6 +51,14 @@ class Ghost(ABC):
     # Game entities inherently need many attributes for state management
     # pylint: disable=too-many-instance-attributes
 
+    # Class constant for all cardinal directions
+    _ALL_DIRECTIONS = [
+        Direction.UP,
+        Direction.DOWN,
+        Direction.LEFT,
+        Direction.RIGHT,
+    ]
+
     def __init__(
         self,
         game_map: GameMap,
@@ -278,6 +286,26 @@ class Ghost(ABC):
             and settings.GHOST_HOUSE_MIN_Y <= grid_y <= settings.GHOST_HOUSE_MAX_Y
         )
 
+    def _wrap_tunnel_x(self, grid_x: int) -> int:
+        """Wrap grid X coordinate for tunnel."""
+        if grid_x < 0:
+            return self._game_map.width - 1
+        if grid_x >= self._game_map.width:
+            return 0
+        return grid_x
+
+    @staticmethod
+    def _convert_corner_to_pixels(
+        corner_x: int, corner_y: int, map_width: int, map_height: int
+    ) -> Tuple[float, float]:
+        """Convert and clamp corner coordinates to pixel positions."""
+        clamped_x = min(max(corner_x, 0), map_width - 1)
+        clamped_y = min(max(corner_y, 0), map_height - 1)
+
+        corner_x_px = clamped_x * settings.TILE_SIZE + settings.TILE_SIZE // 2
+        corner_y_px = clamped_y * settings.TILE_SIZE + settings.TILE_SIZE // 2
+        return corner_x_px, corner_y_px
+
     def _is_opposite_direction(self, direction: Direction) -> bool:
         """Check if given direction is opposite to current direction."""
         dx, dy = direction.value
@@ -292,14 +320,8 @@ class Ghost(ABC):
 
         grid_x, grid_y = self._position.to_grid()
         dx, dy = direction.value
-        next_grid_x = grid_x + dx
+        next_grid_x = self._wrap_tunnel_x(grid_x + dx)
         next_grid_y = grid_y + dy
-
-        # Wrap next_grid_x for tunnel
-        if next_grid_x < 0:
-            next_grid_x = self._game_map.width - 1
-        elif next_grid_x >= self._game_map.width:
-            next_grid_x = 0
 
         if not self._game_map.is_walkable(next_grid_x, next_grid_y):
             return None
@@ -334,12 +356,7 @@ class Ghost(ABC):
         best_direction = self._direction
         best_distance = float("inf")
 
-        for direction in [
-            Direction.UP,
-            Direction.DOWN,
-            Direction.LEFT,
-            Direction.RIGHT,
-        ]:
+        for direction in self._ALL_DIRECTIONS:
             if self._is_opposite_direction(direction):
                 continue
 
@@ -353,25 +370,14 @@ class Ghost(ABC):
     def _choose_random_direction(self) -> None:
         """Pick a random valid direction (used for Frightened mode)."""
         valid_directions = []
-        for direction in [
-            Direction.UP,
-            Direction.DOWN,
-            Direction.LEFT,
-            Direction.RIGHT,
-        ]:
+        for direction in self._ALL_DIRECTIONS:
             if self._is_opposite_direction(direction):
                 continue
 
             grid_x, grid_y = self._position.to_grid()
             dx, dy = direction.value
-            next_grid_x = grid_x + dx
+            next_grid_x = self._wrap_tunnel_x(grid_x + dx)
             next_grid_y = grid_y + dy
-
-            # Wrap next_grid_x for tunnel
-            if next_grid_x < 0:
-                next_grid_x = self._game_map.width - 1
-            elif next_grid_x >= self._game_map.width:
-                next_grid_x = 0
 
             if not self._game_map.is_walkable(next_grid_x, next_grid_y):
                 continue
@@ -438,14 +444,8 @@ class Ghost(ABC):
         center_x, center_y = self._game_map.grid_to_pixel(grid_x, grid_y)
 
         # Check the next tile in the direction of movement
-        next_grid_x = grid_x + dx
+        next_grid_x = self._wrap_tunnel_x(grid_x + dx)
         next_grid_y = grid_y + dy
-
-        # Wrap next_grid_x for tunnel
-        if next_grid_x < 0:
-            next_grid_x = self._game_map.width - 1
-        elif next_grid_x >= self._game_map.width:
-            next_grid_x = 0
 
         # Check if movement is valid
         next_tile_walkable = self._is_next_tile_walkable(next_grid_x, next_grid_y)
@@ -609,14 +609,12 @@ class Blinky(Ghost):
 
     def get_scatter_target(self) -> Tuple[float, float]:
         """Blinky scatters to top-right corner."""
-        corner_x = min(settings.BLINKY_SCATTER_CORNER[0], self._game_map.width - 1)
-        corner_y = max(settings.BLINKY_SCATTER_CORNER[1], 0)
-        corner_x = max(corner_x, 0)
-        corner_y = min(corner_y, self._game_map.height - 1)
-
-        corner_x_px = corner_x * settings.TILE_SIZE + settings.TILE_SIZE // 2
-        corner_y_px = corner_y * settings.TILE_SIZE + settings.TILE_SIZE // 2
-        return corner_x_px, corner_y_px
+        return self._convert_corner_to_pixels(
+            settings.BLINKY_SCATTER_CORNER[0],
+            settings.BLINKY_SCATTER_CORNER[1],
+            self._game_map.width,
+            self._game_map.height,
+        )
 
 
 class Pinky(Ghost):
@@ -650,14 +648,12 @@ class Pinky(Ghost):
 
     def get_scatter_target(self) -> Tuple[float, float]:
         """Pinky scatters to top-left corner."""
-        corner_x = min(settings.PINKY_SCATTER_CORNER[0], self._game_map.width - 1)
-        corner_y = max(settings.PINKY_SCATTER_CORNER[1], 0)
-        corner_x = max(corner_x, 0)
-        corner_y = min(corner_y, self._game_map.height - 1)
-
-        corner_x_px = corner_x * settings.TILE_SIZE + settings.TILE_SIZE // 2
-        corner_y_px = corner_y * settings.TILE_SIZE + settings.TILE_SIZE // 2
-        return corner_x_px, corner_y_px
+        return self._convert_corner_to_pixels(
+            settings.PINKY_SCATTER_CORNER[0],
+            settings.PINKY_SCATTER_CORNER[1],
+            self._game_map.width,
+            self._game_map.height,
+        )
 
 
 class Inky(Ghost):
@@ -708,14 +704,12 @@ class Inky(Ghost):
 
     def get_scatter_target(self) -> Tuple[float, float]:
         """Inky scatters to bottom-right corner."""
-        corner_x = min(settings.INKY_SCATTER_CORNER[0], self._game_map.width - 1)
-        corner_y = max(settings.INKY_SCATTER_CORNER[1], 0)
-        corner_x = max(corner_x, 0)
-        corner_y = min(corner_y, self._game_map.height - 1)
-
-        corner_x_px = corner_x * settings.TILE_SIZE + settings.TILE_SIZE // 2
-        corner_y_px = corner_y * settings.TILE_SIZE + settings.TILE_SIZE // 2
-        return corner_x_px, corner_y_px
+        return self._convert_corner_to_pixels(
+            settings.INKY_SCATTER_CORNER[0],
+            settings.INKY_SCATTER_CORNER[1],
+            self._game_map.width,
+            self._game_map.height,
+        )
 
 
 class Clyde(Ghost):
@@ -754,11 +748,9 @@ class Clyde(Ghost):
 
     def get_scatter_target(self) -> Tuple[float, float]:
         """Clyde scatters to bottom-left corner."""
-        corner_x = min(settings.CLYDE_SCATTER_CORNER[0], self._game_map.width - 1)
-        corner_y = max(settings.CLYDE_SCATTER_CORNER[1], 0)
-        corner_x = max(corner_x, 0)
-        corner_y = min(corner_y, self._game_map.height - 1)
-
-        corner_x_px = corner_x * settings.TILE_SIZE + settings.TILE_SIZE // 2
-        corner_y_px = corner_y * settings.TILE_SIZE + settings.TILE_SIZE // 2
-        return corner_x_px, corner_y_px
+        return self._convert_corner_to_pixels(
+            settings.CLYDE_SCATTER_CORNER[0],
+            settings.CLYDE_SCATTER_CORNER[1],
+            self._game_map.width,
+            self._game_map.height,
+        )
