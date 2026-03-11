@@ -1,7 +1,5 @@
 """Main menu module"""
 
-import sys
-
 import pygame
 
 from src.direction import Direction
